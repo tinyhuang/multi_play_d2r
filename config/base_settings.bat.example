@@ -1,0 +1,31 @@
+:: [EN] Wait time in seconds between starting game instances
+:: [CH] 启动后杀线程的等待时间（秒） .
+set secs=8
+
+:: [EN] Server Address (e.g., kr.actual.battle.net for Asia, us.actual.battle.net for America)
+:: [CH] 服务器地址（亚服：kr.actual.battle.net，美服：us.actual.battle.net，欧服：eu.actual.battle.net） .
+set addres="kr.actual.battle.net"
+
+:: ==========================================
+:: Path Settings / 路径配置 .
+:: ==========================================
+
+:: [EN] Main game executable path (D2R.exe)
+:: [CH] 游戏主程序 (D2R.exe) 所在的完整路径 .
+set diablo="D:\BlizzardGame\d2r\D2R.exe"
+
+:: [EN] Directory containing the multi-boxing tools (handle.exe, NewTitle.exe)
+:: [CH] 存放多开辅助工具（handle.exe 和 NewTitle.exe）的所在目录 .
+::      请不要给这个路径加引号 / Do not add quotes here
+set workdir=D:\BlizzardGame\d2r\bootdiablo
+
+:: ------------------------------------------
+:: Auto-generated tool paths (Usually no need to modify)
+:: 自动生成工具路径（通常无需修改） .
+:: ------------------------------------------
+
+:: handle.exe Download/下载地址: https://learn.microsoft.com/zh-cn/sysinternals/downloads/handle
+set myhandler="%workdir%\handle.exe"
+
+:: NewTitle.exe: Community tool / 社区自制小工具 .
+set newtitle="%workdir%\NewTitle.exe"
