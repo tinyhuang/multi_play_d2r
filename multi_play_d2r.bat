@@ -8,7 +8,7 @@ if "%DEBUG_MODE%"=="1" (
     @echo on
 )
 
-setlocal
+setlocal enabledelayedexpansion
 chcp 65001 >nul
 pushd "%~dp0"
 
@@ -41,96 +41,16 @@ echo =========================================================
 echo [Info] Starting D2R Multi-Play Launcher...
 echo =========================================================
 
-:: ==========================================
-:: Launch Instance 1
-:: ==========================================
-echo [Info] Checking handles for Instance 1...
-%myhandler% -a "Check For Other Instances" -nobanner > Handle.txt 2>&1
-for /f "tokens=3,6 delims= " %%a in (Handle.txt) do handle.exe -p %%a -c %%b -y
-start "" %diablo% -username %ACCOUNT_1_USER% -password %ACCOUNT_1_PASS% -address %addres% -mod %ACCOUNT_1_MOD% -txt -w
-echo [Info] Instance 1 launched successfully. Waiting %secs% seconds before adjusting window...
-timeout /T %secs%
-newtitle "one"  -5 5 871 520
+set LAUNCHED_COUNT=0
+:: 双显示器布局计数器：yte mod -> Monitor 1, 其他 mod -> Monitor 2
+set YTE_COUNT=0
+set OTHER_COUNT=0
 
-:: ==========================================
-:: Launch Instance 2
-:: ==========================================
-echo [Info] Checking handles for Instance 2...
-%myhandler%  -a "Check For Other Instances" -nobanner > Handle.txt 2>&1
-for /f "tokens=3,6 delims= " %%a in (Handle.txt) do handle.exe -p %%a -c %%b -y
-start "" %diablo% -username %ACCOUNT_2_USER% -password %ACCOUNT_2_PASS% -address %addres% -mod %ACCOUNT_2_MOD% -txt -w
-echo [Info] Instance 2 launched successfully. Waiting %secs% seconds before adjusting window...
-timeout /T %secs%
-newtitle "two"  506 401 1724 1000
-
-:: ==========================================
-:: Launch Instance 3
-:: ==========================================
-echo [Info] Checking handles for Instance 3...
-%myhandler%  -a "Check For Other Instances" -nobanner > Handle.txt 2>&1
-for /f "tokens=3,6 delims= " %%a in (Handle.txt) do handle.exe -p %%a -c %%b -y
-start ""  %diablo%  -username %ACCOUNT_3_USER%  -password %ACCOUNT_3_PASS% -address %addres% -mod %ACCOUNT_3_MOD% -txt -w
-echo [Info] Instance 3 launched successfully. Waiting %secs% seconds before adjusting window...
-timeout /T %secs%
-newtitle "three" 849 2 871 520
-
-:: ==========================================
-:: Launch Instance 4
-:: ==========================================
-echo [Info] Checking handles for Instance 4...
-%myhandler%  -a "Check For Other Instances" -nobanner > Handle.txt 2>&1
-for /f "tokens=3,6 delims= " %%a in (Handle.txt) do handle.exe -p %%a -c %%b -y
-start ""  %diablo%  -username %ACCOUNT_4_USER%  -password %ACCOUNT_4_PASS% -address %addres% -mod %ACCOUNT_4_MOD% -txt -w
-echo [Info] Instance 4 launched successfully. Waiting %secs% seconds before adjusting window...
-timeout /T %secs%
-newtitle "four"  1703 4 871 520
-
-:: ==========================================
-:: Launch Instance 5
-:: ==========================================
-echo [Info] Checking handles for Instance 5...
-%myhandler%  -a "Check For Other Instances" -nobanner > Handle.txt 2>&1
-for /f "tokens=3,6 delims= " %%a in (Handle.txt) do handle.exe -p %%a -c %%b -y
-start ""  %diablo%  -username %ACCOUNT_5_USER%  -password %ACCOUNT_5_PASS% -address %addres% -mod %ACCOUNT_5_MOD% -txt -w
-echo [Info] Instance 5 launched successfully. Waiting %secs% seconds before adjusting window...
-timeout /T %secs%
-newtitle "five" -6 500 871 520
-
-:: ==========================================
-:: Launch Instance 6
-:: ==========================================
-echo [Info] Checking handles for Instance 6...
-%myhandler%  -a "Check For Other Instances" -nobanner > Handle.txt 2>&1
-for /f "tokens=3,6 delims= " %%a in (Handle.txt) do handle.exe -p %%a -c %%b -y
-start ""  %diablo%  -username %ACCOUNT_6_USER%  -password %ACCOUNT_6_PASS% -address %addres% -mod %ACCOUNT_6_MOD% -txt -w
-echo [Info] Instance 6 launched successfully. Waiting %secs% seconds before adjusting window...
-timeout /T %secs%
-newtitle "six"  1699 513 871 520
-
-:: ==========================================
-:: Launch Instance 7
-:: ==========================================
-echo [Info] Checking handles for Instance 7...
-%myhandler%  -a "Check For Other Instances" -nobanner > Handle.txt 2>&1
-for /f "tokens=3,6 delims= " %%a in (Handle.txt) do handle.exe -p %%a -c %%b -y
-start ""  %diablo%  -username %ACCOUNT_7_USER%  -password %ACCOUNT_7_PASS% -address %addres% -mod %ACCOUNT_7_MOD% -txt -w
-echo [Info] Instance 7 launched successfully. Waiting %secs% seconds before adjusting window...
-timeout /T %secs%
-newtitle "seven"  -6 1110 871 520
-
-:: ==========================================
-:: Launch Instance 8
-:: ==========================================
-echo [Info] Checking handles for Instance 8...
-%myhandler%  -a "Check For Other Instances" -nobanner > Handle.txt 2>&1
-for /f "tokens=3,6 delims= " %%a in (Handle.txt) do handle.exe -p %%a -c %%b -y
-start ""  %diablo%  -username %ACCOUNT_8_USER%  -password %ACCOUNT_8_PASS% -address %addres% -mod %ACCOUNT_8_MOD% -txt -w
-echo [Info] Instance 8 launched successfully. Waiting %secs% seconds before adjusting window...
-timeout /T %secs%
-newtitle "eight"  1695 877 871 520
+for %%I in (1 2 3 4 5 6 7 8) do call :CheckAndLaunch %%I
 
 echo =========================================================
-echo [Success] All D2R instances have been launched and arranged!
+echo [Success] All requested D2R instances have been launched and arranged!
+echo [Info] Total instances launched: %LAUNCHED_COUNT%
 echo =========================================================
 
 :: Wait for user input to prevent the window from closing immediately, useful for debugging
@@ -138,3 +58,75 @@ echo.
 echo [Info] Script execution finished. Press any key to exit...
 pause
 endlocal
+goto :EOF
+
+:: ==========================================
+:: Subroutine: CheckAndLaunch
+:: Usage: call :CheckAndLaunch <account_number>
+:: yte mod windows -> Monitor 1 (from top-left)
+:: other mod windows -> Monitor 2 (from bottom-left)
+:: ==========================================
+:CheckAndLaunch
+set "ACCT_ID=%~1"
+
+:: Dynamically read account variables using delayed expansion
+set "ACCT_ENABLE=!ACCOUNT_%ACCT_ID%_ENABLE!"
+set "ACCT_USER=!ACCOUNT_%ACCT_ID%_USER!"
+set "ACCT_PASS=!ACCOUNT_%ACCT_ID%_PASS!"
+set "ACCT_MOD=!ACCOUNT_%ACCT_ID%_MOD!"
+set "ACCT_OPTIONS=!ACCOUNT_%ACCT_ID%_OPTIONS!"
+
+:: Robust check: only take the first character to avoid trailing whitespace/CR issues
+set "ENABLE_FLAG=!ACCT_ENABLE:~0,1!"
+if not "!ENABLE_FLAG!"=="1" (
+    echo [Info] Account %ACCT_ID% is disabled. Skipping...
+    exit /b
+)
+
+:: Window size for all instances
+set pos_w=1280
+set pos_h=720
+
+:: Determine window position based on mod type
+set "MOD_CHECK=!ACCT_MOD!"
+:: Trim potential trailing whitespace/CR from mod name
+for %%m in (!MOD_CHECK!) do set "MOD_CHECK=%%m"
+
+if /i "!MOD_CHECK!"=="yte" (
+    rem yte mod -> Monitor 1, from top-left
+    set /a "col=YTE_COUNT %% GRID_COLS"
+    set /a "row=YTE_COUNT / GRID_COLS"
+    set /a "pos_x=col * pos_w"
+    set /a "pos_y=row * pos_h"
+    set /a YTE_COUNT+=1
+    echo [Info] Account %ACCT_ID% ^(yte^) -^> Monitor 1 pos: !pos_x!,!pos_y!
+) else (
+    rem other mods -> Monitor 2, from bottom-left
+    set /a "col=OTHER_COUNT %% GRID_COLS"
+    set /a "row=OTHER_COUNT / GRID_COLS"
+    set /a "pos_x=col * pos_w"
+    set /a "pos_y=MONITOR2_Y_OFFSET + (SCREEN_H - pos_h) - row * pos_h"
+    set /a OTHER_COUNT+=1
+    echo [Info] Account %ACCT_ID% ^(!ACCT_MOD!^) -^> Monitor 2 pos: !pos_x!,!pos_y!
+)
+
+echo [Info] Checking handles for Instance %ACCT_ID%...
+%myhandler% -a "Check For Other Instances" -nobanner > Handle.txt 2>&1
+for /f "tokens=3,6 delims= " %%a in (Handle.txt) do handle.exe -p %%a -c %%b -y
+
+start "" %diablo% -username !ACCT_USER! -password !ACCT_PASS! -address %addres% -mod !ACCT_MOD! -w !ACCT_OPTIONS!
+echo [Info] Instance %ACCT_ID% launched successfully. Waiting %secs% seconds before adjusting window...
+timeout /T %secs%
+
+if "%ACCT_ID%"=="1" set TITLE_NAME=one
+if "%ACCT_ID%"=="2" set TITLE_NAME=two
+if "%ACCT_ID%"=="3" set TITLE_NAME=three
+if "%ACCT_ID%"=="4" set TITLE_NAME=four
+if "%ACCT_ID%"=="5" set TITLE_NAME=five
+if "%ACCT_ID%"=="6" set TITLE_NAME=six
+if "%ACCT_ID%"=="7" set TITLE_NAME=seven
+if "%ACCT_ID%"=="8" set TITLE_NAME=eight
+newtitle "%TITLE_NAME%" !pos_x! !pos_y! !pos_w! !pos_h!
+
+set /a LAUNCHED_COUNT+=1
+exit /b

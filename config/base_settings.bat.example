@@ -19,6 +19,24 @@ set diablo="D:\BlizzardGame\d2r\D2R.exe"
 ::      请不要给这个路径加引号 / Do not add quotes here
 set workdir=D:\BlizzardGame\d2r\bootdiablo
 
+:: ==========================================
+:: Screen and Layout Settings / 屏幕和布局配置
+:: ==========================================
+
+:: [EN] Screen resolution in pixels
+:: [CH] 屏幕分辨率（像素） .
+set SCREEN_W=3840
+set SCREEN_H=2160
+
+:: [EN] Taskbar height in pixels (to prevent windows from being hidden behind it)
+:: [CH] 任务栏高度（像素），确保窗口不被任务栏遮挡 .
+set TASKBAR_H=48
+
+:: [EN] Grid layout: columns x rows (max windows = GRID_COLS * GRID_ROWS)
+:: [CH] 网格布局：列数 x 行数（最大窗口数 = GRID_COLS * GRID_ROWS） .
+set GRID_COLS=3
+set GRID_ROWS=3
+
 :: ------------------------------------------
 :: Auto-generated tool paths (Usually no need to modify)
 :: 自动生成工具路径（通常无需修改） .
