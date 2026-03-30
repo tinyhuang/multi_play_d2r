@@ -110,12 +110,28 @@ if /i "!MOD_CHECK!"=="yte" (
     echo [Info] Account %ACCT_ID% ^(!ACCT_MOD!^) -^> Monitor 2 pos: !pos_x!,!pos_y!
 )
 
-echo [Info] Checking handles for Instance %ACCT_ID%...
+:: Define a separate profile directory for this account to isolate Settings
+set "FAKE_PROFILE=%workdir%\profiles\account_!ACCT_ID!"
+set "D2R_SAVE_PATH=!FAKE_PROFILE!\Saved Games\Diablo II Resurrected"
+
+:: Create the faux profile directory if it does not exist
+if not exist "!D2R_SAVE_PATH!" (
+    mkdir "!D2R_SAVE_PATH!"
+    
+    :: Attempt to copy the system's default Settings.json as a base configuration
+    if exist "%USERPROFILE%\Saved Games\Diablo II Resurrected\Settings.json" (
+        echo [Info] Copying default Settings.json for Account !ACCT_ID!...
+        copy "%USERPROFILE%\Saved Games\Diablo II Resurrected\Settings.json" "!D2R_SAVE_PATH!\Settings.json" >nul
+    )
+)
+
+echo [Info] Checking handles for Instance !ACCT_ID!...
 %myhandler% -a "Check For Other Instances" -nobanner > Handle.txt 2>&1
 for /f "tokens=3,6 delims= " %%a in (Handle.txt) do handle.exe -p %%a -c %%b -y
 
-start "" %diablo% -username !ACCT_USER! -password !ACCT_PASS! -address %addres% -mod !ACCT_MOD! -w !ACCT_OPTIONS!
-echo [Info] Instance %ACCT_ID% launched successfully. Waiting %secs% seconds before adjusting window...
+:: Start the game using a wrapper command to inject the custom USERPROFILE environment variable
+cmd /c "set USERPROFILE=!FAKE_PROFILE! && start "" %diablo% -username !ACCT_USER! -password !ACCT_PASS! -address %addres% -mod !ACCT_MOD! -w !ACCT_OPTIONS!"
+echo [Info] Instance !ACCT_ID! launched successfully. Waiting %secs% seconds before adjusting window...
 timeout /T %secs%
 
 if "%ACCT_ID%"=="1" set TITLE_NAME=one

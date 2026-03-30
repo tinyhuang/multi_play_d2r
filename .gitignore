@@ -5,3 +5,4 @@ config/base_settings.local.bat
 
 # Ignore original personal script
 multi_play_d2r_origin.bat
+profiles/
