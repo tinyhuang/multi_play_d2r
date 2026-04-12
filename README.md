@@ -12,7 +12,7 @@
   - 使用 `yte` Mod 的实例 → 自动排列到主显示器（左上角起）
   - 其他 Mod 的实例 → 自动排列到副显示器（左下角起）
 - **配置与密码分离**：账号密码单独存放在 `config/accounts_secrets.bat`（已加入 `.gitignore`，不会上传到 GitHub）
-- **每个账号可独立配置**：Mod 名称、启动参数（如 `-txt -ns -lq`）
+- **每个账号可独立配置**：Mod 名称、启动参数（如 `-txt -ns -lq`）、游戏可执行文件路径（`ACCOUNT_x_DIABLO`，留空则使用全局 `diablo`）
 - **自动清理残留句柄**：使用 `handle.exe` 查找并关闭残留的游戏进程句柄，避免冲突
 - **窗口自动定位**：使用 `NewTitle.exe` 将每个游戏窗口精确移动到计算好的位置
 - **调试模式**：通过 `DEBUG_MODE=1` 开启命令回显，方便排查问题
@@ -88,6 +88,7 @@ set ACCOUNT_1_USER=your@email.com       :: 战网账号
 set ACCOUNT_1_PASS=your_password        :: 游戏密码
 set ACCOUNT_1_MOD=tiny                  :: Mod 名称（留空则不加载 Mod）
 set ACCOUNT_1_OPTIONS=-txt              :: 可选启动参数
+set ACCOUNT_1_DIABLO=                   :: 独立游戏路径（留空则使用全局 diablo）
 
 :: ... 最多配置到 Account 8
 ```

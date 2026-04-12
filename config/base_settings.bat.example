@@ -12,6 +12,8 @@ set addres="kr.actual.battle.net"
 
 :: [EN] Main game executable path (D2R.exe)
 :: [CH] 游戏主程序 (D2R.exe) 所在的完整路径 .
+:: [CH] 此为全局默认值；可通过 accounts_secrets.bat 中的 ACCOUNT_x_DIABLO 为单个账号指定不同路径 .
+:: [EN] This is the global default; override per-account via ACCOUNT_x_DIABLO in accounts_secrets.bat.
 set diablo="D:\BlizzardGame\d2r\D2R.exe"
 
 :: [EN] Directory containing the multi-boxing tools (handle.exe, NewTitle.exe)
