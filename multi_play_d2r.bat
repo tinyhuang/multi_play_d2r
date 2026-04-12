@@ -142,6 +142,7 @@ set "ACCT_PASS=!ACCOUNT_%ACCT_ID%_PASS!"
 set "ACCT_MOD=!ACCOUNT_%ACCT_ID%_MOD!"
 set "ACCT_OPTIONS=!ACCOUNT_%ACCT_ID%_OPTIONS!"
 set "ACCT_MONITOR=!ACCOUNT_%ACCT_ID%_MONITOR!"
+set "ACCT_DIABLO=!ACCOUNT_%ACCT_ID%_DIABLO!"
 
 :: Robust check: only take the first character to avoid trailing whitespace/CR issues
 set "ENABLE_FLAG=!ACCT_ENABLE:~0,1!"
@@ -274,9 +275,23 @@ if exist "!D2R_SAVE_PATH!\Settings.json" (
     copy /Y "!D2R_SAVE_PATH!\Settings.json" "!GLOBAL_D2R_SAVE_PATH!\Settings.json" >nul
 )
 
+:: Resolve per-account or global game executable path
+set "ACCT_DIABLO_RESOLVED=!ACCT_DIABLO!"
+if not defined ACCT_DIABLO_RESOLVED set "ACCT_DIABLO_RESOLVED=%diablo%"
+if not defined ACCT_DIABLO_RESOLVED (
+    echo [Error] Account !ACCT_ID!: No game executable path configured. Skipping...
+    echo         Please set ACCOUNT_!ACCT_ID!_DIABLO or the global 'diablo' variable.
+    exit /b
+)
+if not exist !ACCT_DIABLO_RESOLVED! (
+    echo [Error] Account !ACCT_ID!: Game executable not found: !ACCT_DIABLO_RESOLVED!
+    echo         Please verify ACCOUNT_!ACCT_ID!_DIABLO or the global 'diablo' path.
+    exit /b
+)
+
 :: Start the game using a wrapper command to inject the custom USERPROFILE environment variable
-cmd /c "set USERPROFILE=!FAKE_PROFILE! && start "" %diablo% -username !ACCT_USER! -password !ACCT_PASS! -address %addres% -mod !ACCT_MOD! -w !ACCT_OPTIONS!"
-echo [Info] Instance !ACCT_ID! launched successfully. Waiting %secs% seconds before adjusting window...
+cmd /c "set USERPROFILE=!FAKE_PROFILE! && start "" !ACCT_DIABLO_RESOLVED! -username !ACCT_USER! -password !ACCT_PASS! -address %addres% -mod !ACCT_MOD! -w !ACCT_OPTIONS!"
+echo [Info] Instance !ACCT_ID! launched (exe: !ACCT_DIABLO_RESOLVED!). Waiting %secs% seconds before adjusting window...
 timeout /T %secs%
 
 if "%ACCT_ID%"=="1" set TITLE_NAME=one
