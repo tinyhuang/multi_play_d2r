@@ -67,8 +67,8 @@ set diablo="D:\BlizzardGame\d2r\D2R.exe"
 :: 工具所在目录（存放 handle.exe 和 NewTitle.exe）
 set workdir=D:\BlizzardGame\d2r\bootdiablo
 
-:: 显示器数量
-set MONITOR_COUNT=2
+:: 显示器编号（与 Windows 屏幕设置中的编号一致，可跳号）
+set MONITOR_IDS=1 2
 
 :: 默认窗口大小和最小窗口大小
 set DEFAULT_WIN_W=1280
@@ -76,7 +76,7 @@ set DEFAULT_WIN_H=720
 set MIN_WIN_W=800
 set MIN_WIN_H=600
 
-:: Monitor 1 — 主显示器
+:: Display 1 — 主显示器
 set MON_1_W=3840
 set MON_1_H=2160
 set MON_1_SCALE=150
@@ -84,7 +84,7 @@ set MON_1_X=0
 set MON_1_Y=0
 set MON_1_TASKBAR=48
 
-:: Monitor 2 — 外接显示器
+:: Display 2 — 外接显示器
 set MON_2_W=2560
 set MON_2_H=1440
 set MON_2_SCALE=100
@@ -132,9 +132,9 @@ set ACCOUNT_1_PRIMARY=1                 :: 1=游玩主窗口（大窗口），0=
 
 脚本根据每个显示器的实际情况自动计算最优布局：
 
-1. **显示器配置**：用户在 `base_settings.bat` 中声明 1-4 个显示器，每个独立设置分辨率、缩放比、坐标和任务栏高度
+1. **显示器配置**：用户在 `base_settings.bat` 中用 `MONITOR_IDS` 列出 Windows 屏幕编号（与「设置 > 系统 > 屏幕」一致），每个显示器独立设置分辨率、缩放比、坐标和任务栏高度
 2. **账号分配**：
-   - 用户可通过 `ACCOUNT_x_MONITOR` 手动指定目标显示器
+   - 用户可通过 `ACCOUNT_x_MONITOR` 手动指定 Windows 屏幕编号
    - 留空的账号自动分配到当前窗口最少的显示器（均匀分散）
 3. **网格计算**：每个显示器根据分配到的窗口数量自动选择最优的 列×行 网格
 4. **窗口大小自适应**：默认 1280×720，空间不足时自动缩小，最小 800×600

@@ -25,9 +25,11 @@ set workdir=D:\BlizzardGame\d2r\bootdiablo
 :: Monitor and Layout Settings / 显示器和布局配置
 :: ==========================================
 
-:: [CH] 显示器数量（1-4），脚本会根据此值读取 MON_1_* 到 MON_N_* 配置 .
-:: [EN] Number of monitors (1-4). The script reads MON_1_* through MON_N_* accordingly.
-set MONITOR_COUNT=1
+:: [CH] 显示器编号列表：使用与 Windows「设置 > 系统 > 屏幕」中相同的编号，用空格分隔 .
+:: [CH] 例如只用显示器 1 和 3：set MONITOR_IDS=1 3  （可以跳号） .
+:: [EN] List of display numbers matching Windows Settings > System > Display, space-separated.
+:: [EN] Example: if you use Display 1 and Display 3, set MONITOR_IDS=1 3 (gaps OK).
+set MONITOR_IDS=1
 
 :: [CH] 非游玩窗口的固定大小（像素）：这些窗口仅为凑人数而启动，不需要操作 .
 :: [EN] Fixed size for non-play windows (px). These are launched just to fill party slots.
@@ -42,7 +44,7 @@ set PRIMARY_WIN_W=1920
 set PRIMARY_WIN_H=1080
 
 :: ------------------------------------------
-:: Monitor 1 / 显示器 1（主显示器）
+:: Display 1 / 显示器 1（对应 Windows 屏幕设置中的编号 1）
 :: ------------------------------------------
 :: [CH] W/H = 物理分辨率（像素），SCALE = Windows 缩放百分比（如 100、125、150） .
 :: [CH] X/Y = 该显示器在 Windows 多屏坐标系中的左上角位置（主显示器通常为 0,0） .
@@ -56,7 +58,7 @@ set MON_1_Y=0
 set MON_1_TASKBAR=40
 
 :: ------------------------------------------
-:: Monitor 2 / 显示器 2（示例：取消注释并修改即可启用）
+:: Display 2 / 显示器 2（对应 Windows 编号 2，取消注释并修改即可启用）
 :: ------------------------------------------
 :: set MON_2_W=2560
 :: set MON_2_H=1440
@@ -66,7 +68,7 @@ set MON_1_TASKBAR=40
 :: set MON_2_TASKBAR=0
 
 :: ------------------------------------------
-:: Monitor 3 / 显示器 3（示例：取消注释并修改即可启用）
+:: Display 3 / 显示器 3（对应 Windows 编号 3，取消注释并修改即可启用）
 :: ------------------------------------------
 :: set MON_3_W=1920
 :: set MON_3_H=1080

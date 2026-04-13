@@ -51,11 +51,17 @@ set LAUNCHED_COUNT=0
 
 :: ==========================================
 :: Multi-Monitor Setup: backward compatibility + N-monitor support
+:: MONITOR_IDS should match Windows Display numbers (Settings > System > Display)
 :: ==========================================
-if not defined MONITOR_COUNT (
-    :: Legacy mode: build monitor config from old SCREEN_W/H variables
-    set MONITOR_COUNT=1
-    if defined SCREEN_W (
+if not defined MONITOR_IDS (
+    if defined MONITOR_COUNT (
+        :: Convert MONITOR_COUNT to MONITOR_IDS (e.g. 3 -> "1 2 3")
+        set "MONITOR_IDS="
+        for /L %%M in (1,1,!MONITOR_COUNT!) do set "MONITOR_IDS=!MONITOR_IDS! %%M"
+        echo [Info] Converted MONITOR_COUNT=!MONITOR_COUNT! to MONITOR_IDS=!MONITOR_IDS!
+    ) else if defined SCREEN_W (
+        :: Legacy mode: build monitor config from old SCREEN_W/H variables
+        set "MONITOR_IDS=1"
         if not defined DISPLAY1_SCALE set DISPLAY1_SCALE=100
         set "MON_1_W=!SCREEN_W!"
         set "MON_1_H=!SCREEN_H!"
@@ -64,18 +70,26 @@ if not defined MONITOR_COUNT (
         set "MON_1_Y=0"
         if not defined TASKBAR_H set TASKBAR_H=0
         set "MON_1_TASKBAR=!TASKBAR_H!"
+        if defined DISPLAY2_SCALE (
+            set "MONITOR_IDS=1 2"
+            set "MON_2_W=!SCREEN_W!"
+            set "MON_2_H=!SCREEN_H!"
+            set "MON_2_SCALE=!DISPLAY2_SCALE!"
+            if not defined MONITOR2_Y_OFFSET set MONITOR2_Y_OFFSET=0
+            set "MON_2_X=0"
+            set "MON_2_Y=!MONITOR2_Y_OFFSET!"
+            set "MON_2_TASKBAR=0"
+        )
+        echo [Info] Legacy monitor config detected. MONITOR_IDS=!MONITOR_IDS!
+    ) else (
+        set "MONITOR_IDS=1"
+        echo [Info] No monitor config found. Defaulting to MONITOR_IDS=1
     )
-    if defined DISPLAY2_SCALE (
-        set MONITOR_COUNT=2
-        set "MON_2_W=!SCREEN_W!"
-        set "MON_2_H=!SCREEN_H!"
-        set "MON_2_SCALE=!DISPLAY2_SCALE!"
-        if not defined MONITOR2_Y_OFFSET set MONITOR2_Y_OFFSET=0
-        set "MON_2_X=0"
-        set "MON_2_Y=!MONITOR2_Y_OFFSET!"
-        set "MON_2_TASKBAR=0"
-    )
-    echo [Info] Legacy monitor config detected. Mapped to !MONITOR_COUNT! monitor^(s^).
+)
+
+:: Determine first monitor ID (used as default fallback)
+for %%M in (!MONITOR_IDS!) do (
+    if not defined FIRST_MON_ID set "FIRST_MON_ID=%%M"
 )
 
 :: Default window size
@@ -90,8 +104,12 @@ if not defined PRIMARY_WIN_H set PRIMARY_WIN_H=1080
 :: Phase 1: Auto-assign MONITOR for accounts that left it blank
 ::          Strategy: assign to the monitor with fewest windows (round-robin on ties)
 :: ==========================================
-:: First pass: count explicitly assigned windows per monitor
-for /L %%M in (1,1,!MONITOR_COUNT!) do set "MON_%%M_TOTAL=0"
+:: First pass: init counters and count explicitly assigned windows per monitor
+for %%M in (!MONITOR_IDS!) do set "MON_%%M_TOTAL=0"
+
+:: Build a lookup string to validate monitor IDs (e.g. " 1 3 4 ")
+set "VALID_MONS= "
+for %%M in (!MONITOR_IDS!) do set "VALID_MONS=!VALID_MONS!%%M "
 
 for %%I in (1 2 3 4 5 6 7 8) do (
     set "CHK_ENABLE=!ACCOUNT_%%I_ENABLE!"
@@ -99,15 +117,15 @@ for %%I in (1 2 3 4 5 6 7 8) do (
     if "!CHK_ENABLE!"=="1" (
         set "CHK_MON=!ACCOUNT_%%I_MONITOR!"
         if defined CHK_MON (
-            set "CHK_MON=!CHK_MON:~0,1!"
-            if !CHK_MON! gtr !MONITOR_COUNT! (
-                echo [Warn] Account %%I assigned to Monitor !CHK_MON! but only !MONITOR_COUNT! monitor^(s^) configured. Reassigning to Monitor 1.
-                set "ACCOUNT_%%I_MONITOR=1"
-                set /a MON_1_TOTAL+=1
-            ) else if !CHK_MON! lss 1 (
-                echo [Warn] Account %%I has invalid monitor number. Reassigning to Monitor 1.
-                set "ACCOUNT_%%I_MONITOR=1"
-                set /a MON_1_TOTAL+=1
+            :: Validate: is this monitor ID in MONITOR_IDS?
+            set "_found=0"
+            for %%M in (!MONITOR_IDS!) do (
+                if "!CHK_MON!"=="%%M" set "_found=1"
+            )
+            if "!_found!"=="0" (
+                echo [Warn] Account %%I assigned to Display !CHK_MON! which is not in MONITOR_IDS=!MONITOR_IDS!. Reassigning to Display !FIRST_MON_ID!.
+                set "ACCOUNT_%%I_MONITOR=!FIRST_MON_ID!"
+                set /a "MON_!FIRST_MON_ID!_TOTAL+=1"
             ) else (
                 set /a "MON_!CHK_MON!_TOTAL+=1"
             )
@@ -123,9 +141,9 @@ for %%I in (1 2 3 4 5 6 7 8) do (
         set "CHK_MON=!ACCOUNT_%%I_MONITOR!"
         if not defined CHK_MON (
             :: Find monitor with fewest windows
-            set "BEST_MON=1"
-            set "BEST_COUNT=!MON_1_TOTAL!"
-            for /L %%M in (2,1,!MONITOR_COUNT!) do (
+            set "BEST_MON=!FIRST_MON_ID!"
+            set "BEST_COUNT=!MON_%FIRST_MON_ID%_TOTAL!"
+            for %%M in (!MONITOR_IDS!) do (
                 if !MON_%%M_TOTAL! lss !BEST_COUNT! (
                     set "BEST_MON=%%M"
                     set "BEST_COUNT=!MON_%%M_TOTAL!"
@@ -140,12 +158,12 @@ for %%I in (1 2 3 4 5 6 7 8) do (
 :: ==========================================
 :: Phase 2: Calculate grid layout for each monitor
 :: ==========================================
-for /L %%M in (1,1,!MONITOR_COUNT!) do (
+for %%M in (!MONITOR_IDS!) do (
     call :CalcMonitorGrid %%M
 )
 
 :: Initialize per-monitor placement counters
-for /L %%M in (1,1,!MONITOR_COUNT!) do set "MON_%%M_PLACED=0"
+for %%M in (!MONITOR_IDS!) do set "MON_%%M_PLACED=0"
 
 :: Perform 1-time backup of Global Settings.json to preserve main account layout
 set "GLOBAL_D2R_SAVE_PATH=%USERPROFILE%\Saved Games\Diablo II Resurrected"
