@@ -30,8 +30,14 @@ if not exist "config\accounts_secrets.bat" (
 )
 
 :: Call configurations
-call "config\base_settings.bat"
-call "config\accounts_secrets.bat"
+:: Normalize line endings first (LF -> CRLF) so cmd.exe can parse them correctly.
+:: This handles config files created or edited on macOS/Linux where line endings are LF-only.
+:: The 'more' command is a Windows text filter that always outputs CRLF.
+more < "config\base_settings.bat" > "%TEMP%\_d2r_base.bat" 2>nul
+more < "config\accounts_secrets.bat" > "%TEMP%\_d2r_acct.bat" 2>nul
+call "%TEMP%\_d2r_base.bat"
+call "%TEMP%\_d2r_acct.bat"
+del /q "%TEMP%\_d2r_base.bat" "%TEMP%\_d2r_acct.bat" 2>nul
 
 :: Change to Working Directory
 D:
