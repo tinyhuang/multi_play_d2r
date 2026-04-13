@@ -106,6 +106,7 @@ set ACCOUNT_1_PASS=your_password        :: 游戏密码
 set ACCOUNT_1_MOD=tiny                  :: Mod 名称（留空则不加载 Mod）
 set ACCOUNT_1_OPTIONS=-txt              :: 可选启动参数
 set ACCOUNT_1_DIABLO=                   :: 独立游戏路径（留空则使用全局 diablo）
+set ACCOUNT_1_PRIMARY=1                 :: 1=游玩主窗口（大窗口），0=凑人数窗口
 
 :: ... 最多配置到 Account 8
 ```

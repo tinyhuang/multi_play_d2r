@@ -29,12 +29,17 @@ set workdir=D:\BlizzardGame\d2r\bootdiablo
 :: [EN] Number of monitors (1-4). The script reads MON_1_* through MON_N_* accordingly.
 set MONITOR_COUNT=1
 
-:: [CH] 默认游戏窗口大小（像素）。若显示器空间不足，脚本会自动缩小但不低于 MIN 值 .
-:: [EN] Default game window size (px). Auto-shrinks if monitor space is tight, down to MIN values.
+:: [CH] 非游玩窗口的固定大小（像素）：这些窗口仅为凑人数而启动，不需要操作 .
+:: [EN] Fixed size for non-play windows (px). These are launched just to fill party slots.
 set DEFAULT_WIN_W=1280
 set DEFAULT_WIN_H=720
 set MIN_WIN_W=800
 set MIN_WIN_H=600
+
+:: [CH] 游玩窗口（PRIMARY=1）的默认大小（像素）：这是你实际操作的主窗口 .
+:: [EN] Default size for play windows (PRIMARY=1). This is the window you actually play on.
+set PRIMARY_WIN_W=1920
+set PRIMARY_WIN_H=1080
 
 :: ------------------------------------------
 :: Monitor 1 / 显示器 1（主显示器）

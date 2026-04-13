@@ -83,6 +83,8 @@ if not defined DEFAULT_WIN_W set DEFAULT_WIN_W=1280
 if not defined DEFAULT_WIN_H set DEFAULT_WIN_H=720
 if not defined MIN_WIN_W set MIN_WIN_W=800
 if not defined MIN_WIN_H set MIN_WIN_H=600
+if not defined PRIMARY_WIN_W set PRIMARY_WIN_W=1920
+if not defined PRIMARY_WIN_H set PRIMARY_WIN_H=1080
 
 :: ==========================================
 :: Phase 1: Auto-assign MONITOR for accounts that left it blank
@@ -184,6 +186,7 @@ set "ACCT_MOD=!ACCOUNT_%ACCT_ID%_MOD!"
 set "ACCT_OPTIONS=!ACCOUNT_%ACCT_ID%_OPTIONS!"
 set "ACCT_MONITOR=!ACCOUNT_%ACCT_ID%_MONITOR!"
 set "ACCT_DIABLO=!ACCOUNT_%ACCT_ID%_DIABLO!"
+set "ACCT_PRIMARY=!ACCOUNT_%ACCT_ID%_PRIMARY!"
 
 :: Robust check: only take the first character to avoid trailing whitespace/CR issues
 set "ENABLE_FLAG=!ACCT_ENABLE:~0,1!"
@@ -197,9 +200,17 @@ set "M=!ACCT_MONITOR!"
 if not defined M set "M=1"
 set "M=!M:~0,1!"
 
-:: Read this monitor's pre-calculated grid parameters
-set "pos_w=!MON_%M%_WIN_W!"
-set "pos_h=!MON_%M%_WIN_H!"
+:: Determine window size based on PRIMARY flag
+set "PRI_FLAG=!ACCT_PRIMARY:~0,1!"
+if "!PRI_FLAG!"=="1" (
+    set "pos_w=!PRIMARY_WIN_W!"
+    set "pos_h=!PRIMARY_WIN_H!"
+    if not defined pos_w set "pos_w=1920"
+    if not defined pos_h set "pos_h=1080"
+) else (
+    set "pos_w=!MON_%M%_WIN_W!"
+    set "pos_h=!MON_%M%_WIN_H!"
+)
 set "GRID_C=!MON_%M%_GRID_COLS!"
 set "GRID_R=!MON_%M%_GRID_ROWS!"
 set "STEP_X=!MON_%M%_STEP_X!"
@@ -223,7 +234,9 @@ if !pos_x! gtr !max_x! set "pos_x=!max_x!"
 if !pos_y! gtr !max_y! set "pos_y=!max_y!"
 
 set /a "MON_%M%_PLACED+=1"
-echo [Info] Account !ACCT_ID! ^(!ACCT_MOD!^) -^> Monitor !M! pos: !pos_x!,!pos_y! size: !pos_w!x!pos_h!
+set "_role=non-play"
+if "!PRI_FLAG!"=="1" set "_role=PLAY"
+echo [Info] Account !ACCT_ID! ^(!ACCT_MOD!^) [!_role!] -^> Monitor !M! pos: !pos_x!,!pos_y! size: !pos_w!x!pos_h!
 
 :: Define a separate profile directory for this account to isolate Settings
 set "FAKE_PROFILE=%workdir%\profiles\account_!ACCT_ID!"
