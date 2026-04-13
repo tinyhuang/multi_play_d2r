@@ -48,66 +48,102 @@ echo [Info] Starting D2R Multi-Play Launcher...
 echo =========================================================
 
 set LAUNCHED_COUNT=0
-:: 双显示器布局计数器：Monitor 1 和 Monitor 2
-set MON1_COUNT=0
-set MON2_COUNT=0
 
-:: Pre-count Enabled Instances for Auto Layout
-set TOTAL_MON_1=0
-set TOTAL_MON_2=0
-if "%AUTO_LAYOUT_GRID%"=="1" (
-    for %%I in (1 2 3 4 5 6 7 8) do (
-        set "CHK_ENABLE=!ACCOUNT_%%I_ENABLE!"
-        set "CHK_ENABLE=!CHK_ENABLE:~0,1!"
-        if "!CHK_ENABLE!"=="1" (
-            set "CHK_MON=!ACCOUNT_%%I_MONITOR!"
-            if "!CHK_MON!"=="" set "CHK_MON=1"
+:: ==========================================
+:: Multi-Monitor Setup: backward compatibility + N-monitor support
+:: ==========================================
+if not defined MONITOR_COUNT (
+    :: Legacy mode: build monitor config from old SCREEN_W/H variables
+    set MONITOR_COUNT=1
+    if defined SCREEN_W (
+        if not defined DISPLAY1_SCALE set DISPLAY1_SCALE=100
+        set "MON_1_W=!SCREEN_W!"
+        set "MON_1_H=!SCREEN_H!"
+        set "MON_1_SCALE=!DISPLAY1_SCALE!"
+        set "MON_1_X=0"
+        set "MON_1_Y=0"
+        if not defined TASKBAR_H set TASKBAR_H=0
+        set "MON_1_TASKBAR=!TASKBAR_H!"
+    )
+    if defined DISPLAY2_SCALE (
+        set MONITOR_COUNT=2
+        set "MON_2_W=!SCREEN_W!"
+        set "MON_2_H=!SCREEN_H!"
+        set "MON_2_SCALE=!DISPLAY2_SCALE!"
+        if not defined MONITOR2_Y_OFFSET set MONITOR2_Y_OFFSET=0
+        set "MON_2_X=0"
+        set "MON_2_Y=!MONITOR2_Y_OFFSET!"
+        set "MON_2_TASKBAR=0"
+    )
+    echo [Info] Legacy monitor config detected. Mapped to !MONITOR_COUNT! monitor^(s^).
+)
+
+:: Default window size
+if not defined DEFAULT_WIN_W set DEFAULT_WIN_W=1280
+if not defined DEFAULT_WIN_H set DEFAULT_WIN_H=720
+if not defined MIN_WIN_W set MIN_WIN_W=800
+if not defined MIN_WIN_H set MIN_WIN_H=600
+
+:: ==========================================
+:: Phase 1: Auto-assign MONITOR for accounts that left it blank
+::          Strategy: assign to the monitor with fewest windows (round-robin on ties)
+:: ==========================================
+:: First pass: count explicitly assigned windows per monitor
+for /L %%M in (1,1,!MONITOR_COUNT!) do set "MON_%%M_TOTAL=0"
+
+for %%I in (1 2 3 4 5 6 7 8) do (
+    set "CHK_ENABLE=!ACCOUNT_%%I_ENABLE!"
+    set "CHK_ENABLE=!CHK_ENABLE:~0,1!"
+    if "!CHK_ENABLE!"=="1" (
+        set "CHK_MON=!ACCOUNT_%%I_MONITOR!"
+        if defined CHK_MON (
             set "CHK_MON=!CHK_MON:~0,1!"
-            if "!CHK_MON!"=="1" (
-                set /a TOTAL_MON_1+=1
+            if !CHK_MON! gtr !MONITOR_COUNT! (
+                echo [Warn] Account %%I assigned to Monitor !CHK_MON! but only !MONITOR_COUNT! monitor^(s^) configured. Reassigning to Monitor 1.
+                set "ACCOUNT_%%I_MONITOR=1"
+                set /a MON_1_TOTAL+=1
+            ) else if !CHK_MON! lss 1 (
+                echo [Warn] Account %%I has invalid monitor number. Reassigning to Monitor 1.
+                set "ACCOUNT_%%I_MONITOR=1"
+                set /a MON_1_TOTAL+=1
             ) else (
-                set /a TOTAL_MON_2+=1
+                set /a "MON_!CHK_MON!_TOTAL+=1"
             )
         )
     )
-    
-    :: Calculate Auto Grid Cols and Rows for Monitor 1
-    if !TOTAL_MON_1! leq 2 (
-        set GRID_COLS_MON1=!TOTAL_MON_1!
-        set GRID_ROWS_MON1=1
-    ) else if !TOTAL_MON_1! leq 4 (
-        set GRID_COLS_MON1=2
-        set GRID_ROWS_MON1=2
-    ) else if !TOTAL_MON_1! leq 6 (
-        set GRID_COLS_MON1=3
-        set GRID_ROWS_MON1=2
-    ) else (
-        set GRID_COLS_MON1=4
-        set GRID_ROWS_MON1=2
-    )
-    if !GRID_COLS_MON1! equ 0 set GRID_COLS_MON1=1
-    
-    :: Calculate Auto Grid Cols and Rows for Monitor 2
-    if !TOTAL_MON_2! leq 2 (
-        set GRID_COLS_MON2=!TOTAL_MON_2!
-        set GRID_ROWS_MON2=1
-    ) else if !TOTAL_MON_2! leq 4 (
-        set GRID_COLS_MON2=2
-        set GRID_ROWS_MON2=2
-    ) else if !TOTAL_MON_2! leq 6 (
-        set GRID_COLS_MON2=3
-        set GRID_ROWS_MON2=2
-    ) else (
-        set GRID_COLS_MON2=4
-        set GRID_ROWS_MON2=2
-    )
-    if !GRID_COLS_MON2! equ 0 set GRID_COLS_MON2=1
-) else (
-    set GRID_COLS_MON1=!GRID_COLS!
-    set GRID_ROWS_MON1=!GRID_ROWS!
-    set GRID_COLS_MON2=!GRID_COLS!
-    set GRID_ROWS_MON2=!GRID_ROWS!
 )
+
+:: Second pass: assign unassigned accounts to least-loaded monitor
+for %%I in (1 2 3 4 5 6 7 8) do (
+    set "CHK_ENABLE=!ACCOUNT_%%I_ENABLE!"
+    set "CHK_ENABLE=!CHK_ENABLE:~0,1!"
+    if "!CHK_ENABLE!"=="1" (
+        set "CHK_MON=!ACCOUNT_%%I_MONITOR!"
+        if not defined CHK_MON (
+            :: Find monitor with fewest windows
+            set "BEST_MON=1"
+            set "BEST_COUNT=!MON_1_TOTAL!"
+            for /L %%M in (2,1,!MONITOR_COUNT!) do (
+                if !MON_%%M_TOTAL! lss !BEST_COUNT! (
+                    set "BEST_MON=%%M"
+                    set "BEST_COUNT=!MON_%%M_TOTAL!"
+                )
+            )
+            set "ACCOUNT_%%I_MONITOR=!BEST_MON!"
+            set /a "MON_!BEST_MON!_TOTAL+=1"
+        )
+    )
+)
+
+:: ==========================================
+:: Phase 2: Calculate grid layout for each monitor
+:: ==========================================
+for /L %%M in (1,1,!MONITOR_COUNT!) do (
+    call :CalcMonitorGrid %%M
+)
+
+:: Initialize per-monitor placement counters
+for /L %%M in (1,1,!MONITOR_COUNT!) do set "MON_%%M_PLACED=0"
 
 :: Perform 1-time backup of Global Settings.json to preserve main account layout
 set "GLOBAL_D2R_SAVE_PATH=%USERPROFILE%\Saved Games\Diablo II Resurrected"
@@ -135,8 +171,7 @@ goto :EOF
 :: ==========================================
 :: Subroutine: CheckAndLaunch
 :: Usage: call :CheckAndLaunch <account_number>
-:: Assigned to Monitor 1 -> Monitor 1 (from top-left)
-:: Assigned to Monitor 2 -> Monitor 2 (from bottom-left)
+:: Launches game instance and positions window on assigned monitor.
 :: ==========================================
 :CheckAndLaunch
 set "ACCT_ID=%~1"
@@ -157,98 +192,38 @@ if not "!ENABLE_FLAG!"=="1" (
     exit /b
 )
 
-:: Window size for all instances
-set pos_w=1280
-set pos_h=720
+:: ====== Resolve monitor assignment and calculate window position ======
+set "M=!ACCT_MONITOR!"
+if not defined M set "M=1"
+set "M=!M:~0,1!"
 
-:: Windows DPI Scaling Adjustment
-if not defined DISPLAY1_SCALE set DISPLAY1_SCALE=100
-if not defined DISPLAY2_SCALE set DISPLAY2_SCALE=100
+:: Read this monitor's pre-calculated grid parameters
+set "pos_w=!MON_%M%_WIN_W!"
+set "pos_h=!MON_%M%_WIN_H!"
+set "GRID_C=!MON_%M%_GRID_COLS!"
+set "GRID_R=!MON_%M%_GRID_ROWS!"
+set "STEP_X=!MON_%M%_STEP_X!"
+set "STEP_Y=!MON_%M%_STEP_Y!"
+set "BASE_X=!MON_%M%_X!"
+set "BASE_Y=!MON_%M%_Y!"
+set "SAFE_X=!MON_%M%_SAFE_X!"
+set "SAFE_Y=!MON_%M%_SAFE_Y!"
+set "PLACED=!MON_%M%_PLACED!"
 
-:: Calculate actual logical boundaries / 逻辑分辨率边界
-set /a LOGICAL_W1=SCREEN_W * 100 / DISPLAY1_SCALE
-set /a LOGICAL_H1=SCREEN_H * 100 / DISPLAY1_SCALE
-set /a LOGICAL_W2=SCREEN_W * 100 / DISPLAY2_SCALE
-set /a LOGICAL_H2=SCREEN_H * 100 / DISPLAY2_SCALE
+:: Calculate grid position for this window
+set /a "col=PLACED %% GRID_C"
+set /a "row=PLACED / GRID_C"
+set /a "pos_x=BASE_X + col * STEP_X"
+set /a "pos_y=BASE_Y + row * STEP_Y"
 
-:: Check if TASKBAR_H is defined, default to 0
-if not defined TASKBAR_H set TASKBAR_H=0
+:: Bounds check: keep window within monitor area
+set /a "max_x=BASE_X + SAFE_X"
+set /a "max_y=BASE_Y + SAFE_Y"
+if !pos_x! gtr !max_x! set "pos_x=!max_x!"
+if !pos_y! gtr !max_y! set "pos_y=!max_y!"
 
-:: ====== Monitor 1 Rules ======
-set /a "safe_span_x1=LOGICAL_W1 - pos_w"
-if !safe_span_x1! lss 0 set safe_span_x1=0
-set step_x1=!pos_w!
-if defined GRID_COLS_MON1 (
-    if !GRID_COLS_MON1! gtr 1 (
-        set /a "calc_step_x1=safe_span_x1 / (GRID_COLS_MON1 - 1)"
-        if !calc_step_x1! lss !step_x1! set "step_x1=!calc_step_x1!"
-    )
-)
-
-set /a "safe_span_y1=LOGICAL_H1 - pos_h - TASKBAR_H"
-if !safe_span_y1! lss 0 set safe_span_y1=0
-set step_y1=!pos_h!
-if defined GRID_ROWS_MON1 (
-    if !GRID_ROWS_MON1! gtr 1 (
-        set /a "calc_step_y1=safe_span_y1 / (GRID_ROWS_MON1 - 1)"
-        if !calc_step_y1! lss !step_y1! set "step_y1=!calc_step_y1!"
-    )
-)
-
-:: ====== Monitor 2 Rules ======
-set /a "safe_span_x2=LOGICAL_W2 - pos_w"
-if !safe_span_x2! lss 0 set safe_span_x2=0
-set step_x2=!pos_w!
-if defined GRID_COLS_MON2 (
-    if !GRID_COLS_MON2! gtr 1 (
-        set /a "calc_step_x2=safe_span_x2 / (GRID_COLS_MON2 - 1)"
-        if !calc_step_x2! lss !step_x2! set "step_x2=!calc_step_x2!"
-    )
-)
-
-set /a "safe_span_y2=LOGICAL_H2 - pos_h"
-if !safe_span_y2! lss 0 set safe_span_y2=0
-set step_y2=!pos_h!
-if defined GRID_ROWS_MON2 (
-    if !GRID_ROWS_MON2! gtr 1 (
-        set /a "calc_step_y2=safe_span_y2 / (GRID_ROWS_MON2 - 1)"
-        if !calc_step_y2! lss !step_y2! set "step_y2=!calc_step_y2!"
-    )
-)
-
-:: Determine window position based on monitor assignment
-if "!ACCT_MONITOR!"=="" set "ACCT_MONITOR=1"
-set "MON_CHECK=!ACCT_MONITOR:~0,1!"
-
-if "!MON_CHECK!"=="1" (
-    rem Monitor 1, from top-left
-    set /a "col=MON1_COUNT %% GRID_COLS_MON1"
-    set /a "row=MON1_COUNT / GRID_COLS_MON1"
-    set /a "pos_x=col * step_x1"
-    set /a "pos_y=row * step_y1"
-    
-    rem Force bounds check so windows never cross screen boundaries
-    if !pos_x! gtr !safe_span_x1! set "pos_x=!safe_span_x1!"
-    if !pos_y! gtr !safe_span_y1! set "pos_y=!safe_span_y1!"
-    
-    set /a MON1_COUNT+=1
-    echo [Info] Account !ACCT_ID! ^(!ACCT_MOD!^) -^> Monitor 1 pos: !pos_x!,!pos_y!
-) else (
-    rem Monitor 2, from bottom-left
-    set /a "col=MON2_COUNT %% GRID_COLS_MON2"
-    set /a "row=MON2_COUNT / GRID_COLS_MON2"
-    set /a "pos_x=col * step_x2"
-    set /a "pos_y_offset=row * step_y2"
-    
-    rem Force bounds check
-    if !pos_x! gtr !safe_span_x2! set "pos_x=!safe_span_x2!"
-    if !pos_y_offset! gtr !safe_span_y2! set "pos_y_offset=!safe_span_y2!"
-    
-    set /a "pos_y=MONITOR2_Y_OFFSET + safe_span_y2 - pos_y_offset"
-    
-    set /a MON2_COUNT+=1
-    echo [Info] Account !ACCT_ID! ^(!ACCT_MOD!^) -^> Monitor 2 pos: !pos_x!,!pos_y!
-)
+set /a "MON_%M%_PLACED+=1"
+echo [Info] Account !ACCT_ID! ^(!ACCT_MOD!^) -^> Monitor !M! pos: !pos_x!,!pos_y! size: !pos_w!x!pos_h!
 
 :: Define a separate profile directory for this account to isolate Settings
 set "FAKE_PROFILE=%workdir%\profiles\account_!ACCT_ID!"
@@ -311,4 +286,113 @@ if "%ACCT_ID%"=="8" set TITLE_NAME=eight
 newtitle "%TITLE_NAME%" !pos_x! !pos_y! !pos_w! !pos_h!
 
 set /a LAUNCHED_COUNT+=1
+exit /b
+
+:: ==========================================
+:: Subroutine: CalcMonitorGrid
+:: Usage: call :CalcMonitorGrid <monitor_number>
+:: Calculates grid layout, window size, and step values for a monitor.
+:: Reads: MON_M_W, MON_M_H, MON_M_SCALE, MON_M_X, MON_M_Y, MON_M_TASKBAR, MON_M_TOTAL
+:: Writes: MON_M_GRID_COLS, MON_M_GRID_ROWS, MON_M_WIN_W, MON_M_WIN_H,
+::         MON_M_STEP_X, MON_M_STEP_Y, MON_M_SAFE_X, MON_M_SAFE_Y
+:: ==========================================
+:CalcMonitorGrid
+set "MG=%~1"
+set "MG_TOTAL=!MON_%MG%_TOTAL!"
+if not defined MG_TOTAL set MG_TOTAL=0
+if !MG_TOTAL! equ 0 (
+    :: No windows on this monitor, set safe defaults
+    set "MON_%MG%_GRID_COLS=1"
+    set "MON_%MG%_GRID_ROWS=1"
+    set "MON_%MG%_WIN_W=!DEFAULT_WIN_W!"
+    set "MON_%MG%_WIN_H=!DEFAULT_WIN_H!"
+    set "MON_%MG%_STEP_X=0"
+    set "MON_%MG%_STEP_Y=0"
+    set "MON_%MG%_SAFE_X=0"
+    set "MON_%MG%_SAFE_Y=0"
+    exit /b
+)
+
+:: Read monitor properties
+set "MG_W=!MON_%MG%_W!"
+set "MG_H=!MON_%MG%_H!"
+set "MG_SCALE=!MON_%MG%_SCALE!"
+set "MG_TB=!MON_%MG%_TASKBAR!"
+if not defined MG_W set MG_W=1920
+if not defined MG_H set MG_H=1080
+if not defined MG_SCALE set MG_SCALE=100
+if not defined MG_TB set MG_TB=0
+
+:: Calculate logical resolution (physical / DPI scale)
+set /a "LOG_W=MG_W * 100 / MG_SCALE"
+set /a "LOG_H=MG_H * 100 / MG_SCALE - MG_TB"
+if !LOG_H! lss 600 set LOG_H=600
+
+:: Calculate optimal grid: cols x rows to best fit MG_TOTAL windows
+:: Strategy: try cols from 1 upward, pick the first where cols*rows >= total
+::           and the cell aspect ratio is closest to 16:9
+if !MG_TOTAL! equ 1 (
+    set "BEST_C=1"
+    set "BEST_R=1"
+) else if !MG_TOTAL! leq 2 (
+    :: 2 windows: prefer side-by-side if wide enough, else stack
+    set /a "half_w=LOG_W / 2"
+    if !half_w! geq !MIN_WIN_W! (
+        set "BEST_C=2"
+        set "BEST_R=1"
+    ) else (
+        set "BEST_C=1"
+        set "BEST_R=2"
+    )
+) else if !MG_TOTAL! leq 4 (
+    set "BEST_C=2"
+    set /a "BEST_R=(MG_TOTAL + 1) / 2"
+) else if !MG_TOTAL! leq 6 (
+    set "BEST_C=3"
+    set /a "BEST_R=(MG_TOTAL + 2) / 3"
+) else (
+    set "BEST_C=4"
+    set /a "BEST_R=(MG_TOTAL + 3) / 4"
+)
+
+set "MON_%MG%_GRID_COLS=!BEST_C!"
+set "MON_%MG%_GRID_ROWS=!BEST_R!"
+
+:: Calculate window size: try DEFAULT, shrink if needed, clamp to MIN
+set /a "CELL_W=LOG_W / BEST_C"
+set /a "CELL_H=LOG_H / BEST_R"
+
+set "WIN_W=!DEFAULT_WIN_W!"
+set "WIN_H=!DEFAULT_WIN_H!"
+if !WIN_W! gtr !CELL_W! set "WIN_W=!CELL_W!"
+if !WIN_H! gtr !CELL_H! set "WIN_H=!CELL_H!"
+if !WIN_W! lss !MIN_WIN_W! set "WIN_W=!MIN_WIN_W!"
+if !WIN_H! lss !MIN_WIN_H! set "WIN_H=!MIN_WIN_H!"
+set "MON_%MG%_WIN_W=!WIN_W!"
+set "MON_%MG%_WIN_H=!WIN_H!"
+
+:: Calculate step (distance between window origins) and safe span
+set /a "SAFE_X=LOG_W - WIN_W"
+if !SAFE_X! lss 0 set SAFE_X=0
+set /a "SAFE_Y=LOG_H - WIN_H"
+if !SAFE_Y! lss 0 set SAFE_Y=0
+
+set "STEP_X=!WIN_W!"
+if !BEST_C! gtr 1 (
+    set /a "CALC_STEP=SAFE_X / (BEST_C - 1)"
+    if !CALC_STEP! lss !STEP_X! set "STEP_X=!CALC_STEP!"
+)
+
+set "STEP_Y=!WIN_H!"
+if !BEST_R! gtr 1 (
+    set /a "CALC_STEP=SAFE_Y / (BEST_R - 1)"
+    if !CALC_STEP! lss !STEP_Y! set "STEP_Y=!CALC_STEP!"
+)
+
+set "MON_%MG%_STEP_X=!STEP_X!"
+set "MON_%MG%_STEP_Y=!STEP_Y!"
+set "MON_%MG%_SAFE_X=!SAFE_X!"
+set "MON_%MG%_SAFE_Y=!SAFE_Y!"
+
+echo [Info] Monitor !MG!: !LOG_W!x!LOG_H! logical, !MG_TOTAL! window^(s^), grid !BEST_C!x!BEST_R!, win !WIN_W!x!WIN_H!, step !STEP_X!x!STEP_Y!
 exit /b

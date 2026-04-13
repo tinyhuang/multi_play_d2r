@@ -22,22 +22,53 @@ set diablo="D:\BlizzardGame\d2r\D2R.exe"
 set workdir=D:\BlizzardGame\d2r\bootdiablo
 
 :: ==========================================
-:: Screen and Layout Settings / 屏幕和布局配置
+:: Monitor and Layout Settings / 显示器和布局配置
 :: ==========================================
 
-:: [EN] Screen resolution in pixels
-:: [CH] 屏幕分辨率（像素） .
-set SCREEN_W=3840
-set SCREEN_H=2160
+:: [CH] 显示器数量（1-4），脚本会根据此值读取 MON_1_* 到 MON_N_* 配置 .
+:: [EN] Number of monitors (1-4). The script reads MON_1_* through MON_N_* accordingly.
+set MONITOR_COUNT=1
 
-:: [EN] Taskbar height in pixels (to prevent windows from being hidden behind it)
-:: [CH] 任务栏高度（像素），确保窗口不被任务栏遮挡 .
-set TASKBAR_H=48
+:: [CH] 默认游戏窗口大小（像素）。若显示器空间不足，脚本会自动缩小但不低于 MIN 值 .
+:: [EN] Default game window size (px). Auto-shrinks if monitor space is tight, down to MIN values.
+set DEFAULT_WIN_W=1280
+set DEFAULT_WIN_H=720
+set MIN_WIN_W=800
+set MIN_WIN_H=600
 
-:: [EN] Grid layout: columns x rows (max windows = GRID_COLS * GRID_ROWS)
-:: [CH] 网格布局：列数 x 行数（最大窗口数 = GRID_COLS * GRID_ROWS） .
-set GRID_COLS=3
-set GRID_ROWS=3
+:: ------------------------------------------
+:: Monitor 1 / 显示器 1（主显示器）
+:: ------------------------------------------
+:: [CH] W/H = 物理分辨率（像素），SCALE = Windows 缩放百分比（如 100、125、150） .
+:: [CH] X/Y = 该显示器在 Windows 多屏坐标系中的左上角位置（主显示器通常为 0,0） .
+:: [CH] TASKBAR = 该显示器的任务栏高度（像素），避免窗口被遮挡 .
+:: [EN] W/H = physical resolution, SCALE = Windows DPI scaling %, X/Y = top-left offset in virtual desktop, TASKBAR = taskbar height.
+set MON_1_W=1920
+set MON_1_H=1080
+set MON_1_SCALE=100
+set MON_1_X=0
+set MON_1_Y=0
+set MON_1_TASKBAR=40
+
+:: ------------------------------------------
+:: Monitor 2 / 显示器 2（示例：取消注释并修改即可启用）
+:: ------------------------------------------
+:: set MON_2_W=2560
+:: set MON_2_H=1440
+:: set MON_2_SCALE=100
+:: set MON_2_X=1920
+:: set MON_2_Y=0
+:: set MON_2_TASKBAR=0
+
+:: ------------------------------------------
+:: Monitor 3 / 显示器 3（示例：取消注释并修改即可启用）
+:: ------------------------------------------
+:: set MON_3_W=1920
+:: set MON_3_H=1080
+:: set MON_3_SCALE=100
+:: set MON_3_X=-1920
+:: set MON_3_Y=0
+:: set MON_3_TASKBAR=0
 
 :: ------------------------------------------
 :: Auto-generated tool paths (Usually no need to modify)
