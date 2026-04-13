@@ -205,6 +205,8 @@ set "ACCT_OPTIONS=!ACCOUNT_%ACCT_ID%_OPTIONS!"
 set "ACCT_MONITOR=!ACCOUNT_%ACCT_ID%_MONITOR!"
 set "ACCT_DIABLO=!ACCOUNT_%ACCT_ID%_DIABLO!"
 set "ACCT_PRIMARY=!ACCOUNT_%ACCT_ID%_PRIMARY!"
+set "ACCT_WIN_X=!ACCOUNT_%ACCT_ID%_WIN_X!"
+set "ACCT_WIN_Y=!ACCOUNT_%ACCT_ID%_WIN_Y!"
 
 :: Robust check: only take the first character to avoid trailing whitespace/CR issues
 set "ENABLE_FLAG=!ACCT_ENABLE:~0,1!"
@@ -250,6 +252,10 @@ set /a "max_x=BASE_X + SAFE_X"
 set /a "max_y=BASE_Y + SAFE_Y"
 if !pos_x! gtr !max_x! set "pos_x=!max_x!"
 if !pos_y! gtr !max_y! set "pos_y=!max_y!"
+
+:: Override with custom GUI-set position if available (from ACCOUNT_x_WIN_X / WIN_Y)
+if defined ACCT_WIN_X set "pos_x=!ACCT_WIN_X!"
+if defined ACCT_WIN_Y set "pos_y=!ACCT_WIN_Y!"
 
 set /a "MON_%M%_PLACED+=1"
 set "_role=non-play"

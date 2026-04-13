@@ -26,6 +26,18 @@
 ```
 multi_play_d2r/
 ├── multi_play_d2r.bat              # 主启动脚本
+├── launcher_gui.py                 # GUI 启动器入口
+├── build.bat                       # PyInstaller 打包脚本
+├── gui/                            # GUI 模块
+│   ├── __init__.py
+│   ├── i18n.py                     # 中英文国际化
+│   ├── config_parser.py            # .bat 配置文件读写
+│   ├── main_window.py              # 主窗口（标签页 + 工具栏）
+│   ├── tab_global.py               # 全局设置标签页
+│   ├── tab_monitors.py             # 显示器配置标签页
+│   ├── tab_accounts.py             # 账号配置标签页
+│   ├── tab_preview.py              # 布局预览 + 拖拽标签页
+│   └── launcher.py                 # 启动 bat 的子进程封装
 ├── config/
 │   ├── base_settings.bat           # 本地路径与布局配置（需自行创建，见 .example）
 │   ├── base_settings.bat.example   # 配置模板（可提交到 GitHub）
@@ -152,11 +164,47 @@ set ACCOUNT_1_PRIMARY=1                 :: 1=游玩主窗口（大窗口），0=
 
 ---
 
-## 🔐 安全说明
+## �️ GUI 启动器（可选）
+
+除了直接编辑 `.bat` 配置文件，还可以使用 **图形界面启动器** 来管理所有配置：
+
+### 功能
+
+- **全局设置**：服务器地址、游戏路径、窗口大小等
+- **显示器配置**：动态添加/删除显示器，设置分辨率、缩放、坐标偏移
+- **账号管理**：表格化编辑 8 个账号的启用/禁用、密码、Mod、参数等
+- **布局预览**：画布上实时预览所有窗口分布，**支持拖拽调整位置**
+- **中英文切换**：界面语言随时切换
+- **一键保存并启动**：保存配置后直接调用 `multi_play_d2r.bat`
+
+### 使用方式
+
+**方式 A — 直接运行 Python 脚本**（需要 Python 3.6+）
+```bash
+python launcher_gui.py
+```
+
+**方式 B — 打包为 EXE**（无需 Python 环境）
+```bash
+# 先安装 PyInstaller
+pip install pyinstaller
+# 运行打包脚本
+build.bat
+# 输出文件: dist/D2R_Launcher.exe
+```
+
+将 `D2R_Launcher.exe` 放到与 `multi_play_d2r.bat` 同一目录下即可使用。
+
+> 💡 **提示**：GUI 拖拽产生的自定义坐标会保存为 `ACCOUNT_x_WIN_X` / `ACCOUNT_x_WIN_Y`，启动时优先使用这些坐标（留空则回退到自动网格计算）。
+
+---
+
+## �🔐 安全说明
 
 | 文件 | 是否提交 GitHub | 说明 |
 |------|---------------|------|
 | `multi_play_d2r.bat` | ✅ 可以 | 不含敏感信息 |
+| `launcher_gui.py` / `gui/` / `build.bat` | ✅ 可以 | GUI 工具代码 |
 | `config/base_settings.bat.example` | ✅ 可以 | 仅为模板 |
 | `config/accounts_secrets.bat.example` | ✅ 可以 | 仅为模板（含示例占位符） |
 | `config/base_settings.bat` | ❌ 不要 | 含本地路径（已加入 .gitignore） |
