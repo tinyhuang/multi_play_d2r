@@ -1,7 +1,7 @@
-"""Monitor settings tab: add/remove displays, set resolution/scale/offset."""
+"""Monitor settings tab: add/remove displays, auto-detect, arrange."""
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
 
 class MonitorsTab:
@@ -12,51 +12,143 @@ class MonitorsTab:
         self._mon_ids = []
 
         self._build_toolbar()
-        self._scroll_area = ttk.Frame(self.frame)
-        self._scroll_area.pack(fill=tk.BOTH, expand=True, pady=(8, 0))
+
+        # Scrollable area for monitor panels
+        container = ttk.Frame(self.frame)
+        container.pack(fill=tk.BOTH, expand=True, pady=(8, 0))
+
+        canvas = tk.Canvas(container, borderwidth=0, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(container, orient=tk.VERTICAL, command=canvas.yview)
+        self._scroll_frame = ttk.Frame(canvas)
+        self._scroll_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all")),
+        )
+        canvas.create_window((0, 0), window=self._scroll_frame, anchor=tk.NW)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self._scroll_canvas = canvas
+
+    # ----- toolbar -----
 
     def _build_toolbar(self):
         bar = ttk.Frame(self.frame)
         bar.pack(fill=tk.X)
 
-        self._lbl_ids = ttk.Label(bar, text=self.i18n.t("monitor_ids"))
-        self._lbl_ids.pack(side=tk.LEFT)
-
-        self._ids_entry = ttk.Entry(bar, width=20)
-        self._ids_entry.pack(side=tk.LEFT, padx=(8, 4))
-
-        self._btn_apply = ttk.Button(
-            bar, text="Apply", width=8, command=self._apply_ids,
+        self._btn_add = ttk.Button(
+            bar, text=self.i18n.t("add_monitor"), command=self._on_add,
         )
-        self._btn_apply.pack(side=tk.LEFT, padx=4)
+        self._btn_add.pack(side=tk.LEFT, padx=(0, 4))
 
-    def _apply_ids(self):
-        """Rebuild monitor panels from the IDs entry."""
-        ids_text = self._ids_entry.get().strip()
-        new_ids = ids_text.split()
+        self._btn_detect = ttk.Button(
+            bar, text=self.i18n.t("auto_detect"), command=self._on_detect,
+        )
+        self._btn_detect.pack(side=tk.LEFT, padx=4)
 
-        # Preserve existing data for IDs that still exist
-        old_data = {}
-        for mid in self._mon_ids:
-            if mid in self._mon_frames:
-                old_data[mid] = self._get_monitor_data(mid)
+        sep = ttk.Separator(bar, orient=tk.VERTICAL)
+        sep.pack(side=tk.LEFT, fill=tk.Y, padx=8, pady=2)
 
-        # Clear all panels
-        for child in self._scroll_area.winfo_children():
+        self._lbl_arrange = ttk.Label(bar, text=self.i18n.t("arrangement"))
+        self._lbl_arrange.pack(side=tk.LEFT, padx=(0, 4))
+
+        self._btn_h = ttk.Button(
+            bar, text=self.i18n.t("side_by_side"),
+            command=lambda: self._arrange("h"),
+        )
+        self._btn_h.pack(side=tk.LEFT, padx=2)
+
+        self._btn_v = ttk.Button(
+            bar, text=self.i18n.t("stacked"),
+            command=lambda: self._arrange("v"),
+        )
+        self._btn_v.pack(side=tk.LEFT, padx=2)
+
+    # ----- add / remove -----
+
+    def _on_add(self):
+        existing = set(int(x) for x in self._mon_ids if x.isdigit())
+        new_id = 1
+        while new_id in existing:
+            new_id += 1
+        mid = str(new_id)
+        self._mon_ids.append(mid)
+        data = {
+            "W": "1920", "H": "1080", "SCALE": "100",
+            "X": "0", "Y": "0", "TASKBAR": "0",
+        }
+        self._add_monitor_panel(mid, data)
+        self._arrange("h")
+
+    def _on_remove(self, mon_id):
+        if len(self._mon_ids) <= 1:
+            return
+        if mon_id in self._mon_frames:
+            self._mon_frames[mon_id]["lf"].destroy()
+            del self._mon_frames[mon_id]
+        if mon_id in self._mon_ids:
+            self._mon_ids.remove(mon_id)
+
+    # ----- auto-detect -----
+
+    def _on_detect(self):
+        from gui.monitor_detect import detect_monitors
+
+        result = detect_monitors()
+        if result is None:
+            messagebox.showinfo(
+                self.i18n.t("auto_detect"),
+                self.i18n.t("detect_not_available"),
+            )
+            return
+        if not result:
+            messagebox.showwarning(
+                self.i18n.t("auto_detect"),
+                self.i18n.t("detect_failed"),
+            )
+            return
+
+        # Rebuild panels from detected monitors
+        for child in self._scroll_frame.winfo_children():
             child.destroy()
         self._mon_frames.clear()
-        self._mon_ids = new_ids
+        self._mon_ids = []
 
-        for mid in new_ids:
-            data = old_data.get(mid, {
-                "W": "1920", "H": "1080", "SCALE": "100",
-                "X": "0", "Y": "0", "TASKBAR": "0",
-            })
-            self._add_monitor_panel(mid, data)
+        for i, mon in enumerate(result, start=1):
+            mid = str(i)
+            self._mon_ids.append(mid)
+            self._add_monitor_panel(mid, mon)
+
+    # ----- arrangement presets -----
+
+    def _arrange(self, mode):
+        """Auto-calculate X/Y offsets: 'h' = side-by-side, 'v' = stacked."""
+        if not self._mon_ids:
+            return
+
+        offset = 0
+        for mid in self._mon_ids:
+            if mid not in self._mon_frames:
+                continue
+            entries = self._mon_frames[mid]["entries"]
+            w = int(entries["W"].get() or "1920")
+            h = int(entries["H"].get() or "1080")
+            scale = max(int(entries["SCALE"].get() or "100"), 1)
+
+            # Set position
+            _set_entry(entries["X"], str(offset if mode == "h" else 0))
+            _set_entry(entries["Y"], str(offset if mode == "v" else 0))
+
+            # Advance offset by logical size
+            log_w = w * 100 // scale
+            log_h = h * 100 // scale
+            offset += log_w if mode == "h" else log_h
+
+    # ----- panel building -----
 
     def _add_monitor_panel(self, mon_id, data):
         lf = ttk.LabelFrame(
-            self._scroll_area,
+            self._scroll_frame,
             text=self.i18n.t("display_n").format(n=mon_id),
             padding=8,
         )
@@ -64,7 +156,7 @@ class MonitorsTab:
 
         entries = {}
 
-        # Row 0: Resolution + Scale
+        # Row 0: Resolution + Scale + Remove button
         r0 = ttk.Frame(lf)
         r0.pack(fill=tk.X, pady=2)
 
@@ -84,6 +176,13 @@ class MonitorsTab:
         scale_entry = ttk.Entry(r0, width=6)
         scale_entry.pack(side=tk.LEFT)
         scale_entry.insert(0, str(data.get("SCALE", "100")))
+
+        # Remove button at right end
+        btn_rm = ttk.Button(
+            r0, text=self.i18n.t("remove_monitor"), width=6,
+            command=lambda mid=mon_id: self._on_remove(mid),
+        )
+        btn_rm.pack(side=tk.RIGHT)
 
         entries["W"] = w_entry
         entries["H"] = h_entry
@@ -117,6 +216,7 @@ class MonitorsTab:
         self._mon_frames[mon_id] = {
             "lf": lf,
             "entries": entries,
+            "btn_rm": btn_rm,
             "labels": {
                 "res": lbl_res, "scale": lbl_scale,
                 "offset": lbl_offset, "tb": lbl_tb,
@@ -129,14 +229,14 @@ class MonitorsTab:
         entries = self._mon_frames[mon_id]["entries"]
         return {key: entry.get() for key, entry in entries.items()}
 
+    # ----- public API -----
+
     def load(self, base):
         monitors = base.get("_monitors", {})
         ids_str = base.get("MONITOR_IDS", "1")
-        self._ids_entry.delete(0, tk.END)
-        self._ids_entry.insert(0, ids_str)
 
         self._mon_ids = ids_str.split()
-        for child in self._scroll_area.winfo_children():
+        for child in self._scroll_frame.winfo_children():
             child.destroy()
         self._mon_frames.clear()
 
@@ -162,11 +262,21 @@ class MonitorsTab:
         return result
 
     def refresh_labels(self):
-        self._lbl_ids.config(text=self.i18n.t("monitor_ids"))
+        self._btn_add.config(text=self.i18n.t("add_monitor"))
+        self._btn_detect.config(text=self.i18n.t("auto_detect"))
+        self._lbl_arrange.config(text=self.i18n.t("arrangement"))
+        self._btn_h.config(text=self.i18n.t("side_by_side"))
+        self._btn_v.config(text=self.i18n.t("stacked"))
         for mid, widgets in self._mon_frames.items():
             widgets["lf"].config(text=self.i18n.t("display_n").format(n=mid))
+            widgets["btn_rm"].config(text=self.i18n.t("remove_monitor"))
             lbls = widgets["labels"]
             lbls["res"].config(text=self.i18n.t("resolution"))
             lbls["scale"].config(text=self.i18n.t("dpi_scale"))
             lbls["offset"].config(text=self.i18n.t("offset_xy"))
             lbls["tb"].config(text=self.i18n.t("taskbar_height"))
+
+
+def _set_entry(entry, value):
+    entry.delete(0, tk.END)
+    entry.insert(0, value)

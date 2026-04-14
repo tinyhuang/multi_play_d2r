@@ -57,6 +57,12 @@ STRINGS = {
         "dpi_scale": "DPI Scale (%)",
         "offset_xy": "Offset X / Y",
         "taskbar_height": "Taskbar Height (px)",
+        "auto_detect": "Auto Detect",
+        "detect_not_available": "Auto-detect is only available on Windows.",
+        "detect_failed": "Failed to detect monitors. Please configure manually.",
+        "arrangement": "Arrange:",
+        "side_by_side": "Side by Side",
+        "stacked": "Stacked",
 
         # Accounts
         "account_n": "Account {n}",
@@ -128,6 +134,12 @@ STRINGS = {
         "dpi_scale": "缩放比例 (%)",
         "offset_xy": "偏移 X / Y",
         "taskbar_height": "任务栏高度（像素）",
+        "auto_detect": "自动检测",
+        "detect_not_available": "自动检测仅在 Windows 上可用。",
+        "detect_failed": "检测显示器失败，请手动配置。",
+        "arrangement": "排列：",
+        "side_by_side": "并排",
+        "stacked": "上下堆叠",
 
         # Accounts
         "account_n": "账号 {n}",
