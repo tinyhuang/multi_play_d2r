@@ -149,8 +149,8 @@ def save_base_settings(config_dir, settings, monitors):
     # Update variables
     variables = dict(existing)
     variables["secs"] = str(settings.get("secs", "8"))
-    variables["addres"] = f'"{settings.get("addres", "")}"'
-    variables["diablo"] = f'"{settings.get("diablo", "")}"'
+    variables["addres"] = settings.get("addres", "")
+    variables["diablo"] = settings.get("diablo", "")
     variables["workdir"] = settings.get("workdir", "")
     variables["DEFAULT_WIN_W"] = str(settings.get("DEFAULT_WIN_W", "1280"))
     variables["DEFAULT_WIN_H"] = str(settings.get("DEFAULT_WIN_H", "720"))

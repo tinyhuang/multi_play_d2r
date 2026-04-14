@@ -301,14 +301,27 @@ if not defined ACCT_DIABLO_RESOLVED (
     echo         Please set ACCOUNT_!ACCT_ID!_DIABLO or the global 'diablo' variable.
     exit /b
 )
-if not exist !ACCT_DIABLO_RESOLVED! (
+
+:: Normalize path so wrapped quotes in config don't break existence checks or launch args
+for %%F in ("!ACCT_DIABLO_RESOLVED!") do (
+    set "ACCT_DIABLO_RESOLVED=%%~fF"
+    set "ACCT_DIABLO_DIR=%%~dpF"
+)
+
+if not exist "!ACCT_DIABLO_RESOLVED!" (
     echo [Error] Account !ACCT_ID!: Game executable not found: !ACCT_DIABLO_RESOLVED!
     echo         Please verify ACCOUNT_!ACCT_ID!_DIABLO or the global 'diablo' path.
     exit /b
 )
 
-:: Start the game using a wrapper command to inject the custom USERPROFILE environment variable
-cmd /c "set USERPROFILE=!FAKE_PROFILE! && start "" !ACCT_DIABLO_RESOLVED! -username !ACCT_USER! -password !ACCT_PASS! -address %addres% -mod !ACCT_MOD! -w !ACCT_OPTIONS!"
+set "ACCT_MOD_ARG="
+if defined ACCT_MOD set "ACCT_MOD_ARG=-mod !ACCT_MOD!"
+
+set "ACCT_OPTIONS_ARG="
+if defined ACCT_OPTIONS set "ACCT_OPTIONS_ARG=!ACCT_OPTIONS!"
+
+:: Start the game with USERPROFILE override while keeping executable path separate from args.
+cmd /c set "USERPROFILE=!FAKE_PROFILE!" ^&^& start "" /D "!ACCT_DIABLO_DIR!" "!ACCT_DIABLO_RESOLVED!" -username "!ACCT_USER!" -password "!ACCT_PASS!" -address "%addres%" !ACCT_MOD_ARG! -w !ACCT_OPTIONS_ARG!
 echo [Info] Instance !ACCT_ID! launched (exe: !ACCT_DIABLO_RESOLVED!). Waiting %secs% seconds before adjusting window...
 timeout /T %secs%
 
