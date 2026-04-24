@@ -255,9 +255,9 @@ public static partial class NativeMethods
 
     // ======== 管道（用于捕获 handle.exe 输出） ========
 
-    [LibraryImport("kernel32.dll")]
+    [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool CreatePipe(
+    public static extern bool CreatePipe(
         out IntPtr hReadPipe,
         out IntPtr hWritePipe,
         ref WinStructs.SECURITY_ATTRIBUTES lpPipeAttributes,
