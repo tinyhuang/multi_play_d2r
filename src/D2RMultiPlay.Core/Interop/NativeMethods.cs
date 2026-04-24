@@ -219,9 +219,9 @@ public static partial class NativeMethods
 
     // ======== 进程创建 ========
 
-    [LibraryImport("kernel32.dll", EntryPoint = "CreateProcessW", StringMarshalling = StringMarshalling.Utf16)]
+    [DllImport("kernel32.dll", EntryPoint = "CreateProcessW", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool CreateProcess(
+    public static extern bool CreateProcess(
         string? lpApplicationName,
         string lpCommandLine,
         IntPtr lpProcessAttributes,

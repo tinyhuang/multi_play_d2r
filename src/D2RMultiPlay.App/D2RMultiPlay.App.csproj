@@ -7,10 +7,11 @@
     <RootNamespace>D2RMultiPlay.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
 
-    <!-- Native AOT：单文件、自包含、无需 .NET Runtime -->
-    <PublishAot>true</PublishAot>
+    <!-- 自包含发布：单文件，无需安装 .NET Runtime -->
+    <!-- 注意：WinForms 不支持 Native AOT / Trimming，改用 ReadyToRun 优化冷启动 -->
     <SelfContained>true</SelfContained>
-    <TrimMode>full</TrimMode>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishReadyToRun>true</PublishReadyToRun>
     <InvariantGlobalization>false</InvariantGlobalization>
 
     <!-- 应用图标（可后续替换） -->

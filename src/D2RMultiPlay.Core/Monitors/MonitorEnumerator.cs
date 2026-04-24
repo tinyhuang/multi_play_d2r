@@ -19,7 +19,7 @@ public static class MonitorEnumerator
         var monitors = new List<MonitorInfo>();
 
         // 回调函数：每个显示器调用一次
-        NativeMethods.MonitorEnumProc callback = (hMonitor, _, ref WinStructs.RECT _, _) =>
+        NativeMethods.MonitorEnumProc callback = (IntPtr hMonitor, IntPtr hdcMonitor, ref WinStructs.RECT lprcMonitor, IntPtr dwData) =>
         {
             var info = GetMonitorDetails(hMonitor);
             if (info != null)

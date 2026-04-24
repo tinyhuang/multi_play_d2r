@@ -65,6 +65,7 @@ public static class ConfigStore
     /// <summary>
     /// 用 DPAPI (CurrentUser) 加密明文密码，返回 Base64 字符串
     /// </summary>
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     public static string EncryptPassword(string plainText)
     {
         if (string.IsNullOrEmpty(plainText))
@@ -78,6 +79,7 @@ public static class ConfigStore
     /// <summary>
     /// 用 DPAPI (CurrentUser) 解密 Base64 密文，返回明文
     /// </summary>
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     public static string DecryptPassword(string base64Cipher)
     {
         if (string.IsNullOrEmpty(base64Cipher))
