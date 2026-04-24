@@ -17,6 +17,15 @@ if ($appText -match '<PublishAot>\s*true\s*</PublishAot>') {
 if ($appText -match '<TrimMode>\s*full\s*</TrimMode>') {
     Add-CheckError 'D2RMultiPlay.App.csproj: WinForms should not use <TrimMode>full</TrimMode>.'
 }
+if ($appText -notmatch '<ApplicationHighDpiMode>\s*PerMonitorV2\s*</ApplicationHighDpiMode>') {
+    Add-CheckError 'D2RMultiPlay.App.csproj: expected <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>.'
+}
+
+$appManifest = Join-Path $repoRoot 'src/D2RMultiPlay.App/app.manifest'
+$appManifestText = Get-Content -Path $appManifest -Raw
+if ($appManifestText -match '<dpiAwareness' -or $appManifestText -match '<dpiAware') {
+    Add-CheckError 'app.manifest: remove DPI declarations (<dpiAwareness>/<dpiAware>) and use ApplicationHighDpiMode instead.'
+}
 
 # 2) Reject duplicate EmbeddedResource Include items for Strings.resx.
 if ($appText -match '<EmbeddedResource\s+Include="Resources\\Strings\.resx"') {
