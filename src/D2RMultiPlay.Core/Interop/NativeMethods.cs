@@ -173,16 +173,16 @@ public static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MonitorEnumProc lpfnEnum, IntPtr dwData);
 
-    [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW", StringMarshalling = StringMarshalling.Utf16)]
+    [DllImport("user32.dll", EntryPoint = "GetMonitorInfoW", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool GetMonitorInfo(IntPtr hMonitor, ref WinStructs.MONITORINFOEX lpmi);
+    public static extern bool GetMonitorInfo(IntPtr hMonitor, ref WinStructs.MONITORINFOEX lpmi);
 
     [LibraryImport("shcore.dll")]
     public static partial int GetDpiForMonitor(IntPtr hMonitor, int dpiType, out uint dpiX, out uint dpiY);
 
-    [LibraryImport("user32.dll", EntryPoint = "EnumDisplaySettingsW", StringMarshalling = StringMarshalling.Utf16)]
+    [DllImport("user32.dll", EntryPoint = "EnumDisplaySettingsW", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool EnumDisplaySettings(string lpszDeviceName, uint iModeNum, ref WinStructs.DEVMODE lpDevMode);
+    public static extern bool EnumDisplaySettings(string lpszDeviceName, uint iModeNum, ref WinStructs.DEVMODE lpDevMode);
 
     // ======== 窗口操作 ========
 

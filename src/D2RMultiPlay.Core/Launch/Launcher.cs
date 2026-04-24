@@ -4,6 +4,7 @@
 // ============================================================
 
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 using D2RMultiPlay.Core.Config;
 using D2RMultiPlay.Core.Interop;
@@ -21,6 +22,7 @@ public sealed class LaunchResult
     public string Error { get; init; } = "";
 }
 
+[SupportedOSPlatform("windows")]
 public static class Launcher
 {
     /// <summary>
