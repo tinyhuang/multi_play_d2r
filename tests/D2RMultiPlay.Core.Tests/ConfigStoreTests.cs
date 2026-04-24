@@ -3,7 +3,6 @@
 // ============================================================
 
 using D2RMultiPlay.Core.Config;
-using Xunit;
 
 namespace D2RMultiPlay.Core.Tests;
 

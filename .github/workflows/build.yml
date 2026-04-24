@@ -20,6 +20,10 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: CI Precheck (guard known regressions)
+        shell: pwsh
+        run: ./scripts/ci-precheck.ps1
+
       - name: Restore
         run: dotnet restore D2RMultiPlay.sln
 
