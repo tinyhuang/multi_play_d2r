@@ -1,11 +1,5 @@
-config/accounts_secrets.bat
-config/accounts_secrets.local.bat
-config/base_settings.bat
-config/base_settings.local.bat
-
-# Ignore original personal script
+# Legacy BAT launcher leftovers (for compatibility with old local copies)
 multi_play_d2r_origin.bat
-profiles/
 
 # ===== .NET =====
 ## Build results
