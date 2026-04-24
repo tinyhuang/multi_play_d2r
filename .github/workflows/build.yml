@@ -1,0 +1,36 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [ main, feature/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore D2RMultiPlay.sln
+
+      - name: Build
+        run: dotnet build D2RMultiPlay.sln -c Release --no-restore
+
+      - name: Test
+        run: dotnet test D2RMultiPlay.sln -c Release --no-build --verbosity normal
+
+      - name: Publish (Native AOT)
+        run: dotnet publish src/D2RMultiPlay.App/D2RMultiPlay.App.csproj -c Release -r win-x64
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: D2RMultiPlay-win-x64
+          path: src/D2RMultiPlay.App/bin/Release/net8.0-windows/win-x64/publish/

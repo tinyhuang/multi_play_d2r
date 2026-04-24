@@ -6,3 +6,41 @@ config/base_settings.local.bat
 # Ignore original personal script
 multi_play_d2r_origin.bat
 profiles/
+
+# ===== .NET =====
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+publish/
+
+## Visual Studio / Rider
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.idea/
+*.DotSettings.user
+
+## NuGet
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nupkg
+**/packages/repositories.config
+project.lock.json
+
+## Test results
+[Tt]est[Rr]esult*/
+*.trx
+coverage*/
+
+## OS
+.DS_Store
+Thumbs.db

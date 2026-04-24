@@ -1,0 +1,168 @@
+// ============================================================
+// Launcher.cs — D2R 进程启动器
+// 使用 CreateProcessW 注入独立 USERPROFILE 环境变量
+// ============================================================
+
+using System.Runtime.InteropServices;
+using System.Text;
+using D2RMultiPlay.Core.Config;
+using D2RMultiPlay.Core.Interop;
+
+namespace D2RMultiPlay.Core.Launch;
+
+/// <summary>
+/// 启动结果
+/// </summary>
+public sealed class LaunchResult
+{
+    public bool Success { get; init; }
+    public uint ProcessId { get; init; }
+    public IntPtr ProcessHandle { get; init; }
+    public string Error { get; init; } = "";
+}
+
+public static class Launcher
+{
+    /// <summary>
+    /// D2R 启动参数白名单（2026 版本，已移除 -legacy）
+    /// </summary>
+    private static readonly HashSet<string> KnownParams = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "-username", "-password", "-address", "-mod",
+        "-txt", "-ns", "-lq", "-direct", "-uiasset", "-w"
+    };
+
+    /// <summary>
+    /// 启动一个 D2R 实例
+    /// </summary>
+    /// <param name="account">账号配置</param>
+    /// <param name="global">全局设置</param>
+    /// <param name="presetPath">可选的 Settings.json 预设模板路径</param>
+    public static LaunchResult Launch(AccountConfig account, GlobalSettings global, string? presetPath = null)
+    {
+        // 解析游戏路径：账号独立路径 > 全局路径
+        var exePath = !string.IsNullOrWhiteSpace(account.ExePathOverride)
+            ? account.ExePathOverride
+            : global.D2rExePath;
+
+        if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
+        {
+            return new LaunchResult
+            {
+                Success = false,
+                Error = $"游戏路径不存在 / Game executable not found: {exePath}"
+            };
+        }
+
+        // 确定 profile 隔离路径
+        var profilesRoot = !string.IsNullOrWhiteSpace(global.ProfilesRoot)
+            ? global.ProfilesRoot
+            : ConfigStore.DefaultProfilesRoot;
+        var fakeProfile = Path.Combine(profilesRoot, $"account_{account.Id}");
+
+        // 初始化 profile 目录（首次拷贝 Settings.json 种子）
+        EnvBlockBuilder.EnsureProfileDir(fakeProfile, presetPath);
+
+        // 构造命令行
+        var cmdLine = BuildCommandLine(exePath, account, global);
+
+        // 构造环境块（注入 USERPROFILE）
+        var (envPtr, envHandle) = EnvBlockBuilder.Build(fakeProfile);
+
+        try
+        {
+            var si = new WinStructs.STARTUPINFO { cb = Marshal.SizeOf<WinStructs.STARTUPINFO>() };
+
+            bool created = NativeMethods.CreateProcess(
+                null,                                           // lpApplicationName
+                cmdLine,                                        // lpCommandLine
+                IntPtr.Zero,                                    // lpProcessAttributes
+                IntPtr.Zero,                                    // lpThreadAttributes
+                false,                                          // bInheritHandles
+                WinConst.CREATE_UNICODE_ENVIRONMENT,            // 关键：告知系统环境块是 Unicode
+                envPtr,                                         // lpEnvironment（隔离的 USERPROFILE）
+                Path.GetDirectoryName(exePath),                 // lpCurrentDirectory
+                ref si,
+                out var pi);
+
+            if (!created)
+            {
+                int err = Marshal.GetLastWin32Error();
+                return new LaunchResult
+                {
+                    Success = false,
+                    Error = $"CreateProcess 失败 / CreateProcess failed (Win32 error {err})"
+                };
+            }
+
+            // 关闭线程句柄（不需要），保留进程句柄给调用方
+            NativeMethods.CloseHandle(pi.hThread);
+
+            // 挂机窗口降低优先级
+            if (account.Role.Equals("slave", StringComparison.OrdinalIgnoreCase))
+            {
+                NativeMethods.SetPriorityClass(pi.hProcess, WinConst.BELOW_NORMAL_PRIORITY_CLASS);
+            }
+
+            return new LaunchResult
+            {
+                Success = true,
+                ProcessId = pi.dwProcessId,
+                ProcessHandle = pi.hProcess
+            };
+        }
+        finally
+        {
+            envHandle.Free(); // 释放 pinned 环境块
+        }
+    }
+
+    /// <summary>
+    /// 构造 D2R 启动命令行
+    /// </summary>
+    private static string BuildCommandLine(string exePath, AccountConfig account, GlobalSettings global)
+    {
+        var sb = new StringBuilder();
+        sb.Append('"').Append(exePath).Append('"');
+
+        // 基础参数
+        sb.Append(" -w"); // 窗口模式（强制）
+
+        // 账号凭据
+        if (!string.IsNullOrEmpty(account.User))
+            sb.Append(" -username ").Append(account.User);
+
+        if (!string.IsNullOrEmpty(account.PassEnc))
+        {
+            var pass = ConfigStore.DecryptPassword(account.PassEnc);
+            if (!string.IsNullOrEmpty(pass))
+                sb.Append(" -password ").Append(pass);
+        }
+
+        // 服务器
+        if (!string.IsNullOrEmpty(global.BattleNetAddress))
+            sb.Append(" -address ").Append(global.BattleNetAddress);
+
+        // Mod
+        if (!string.IsNullOrEmpty(account.Mod))
+            sb.Append(" -mod ").Append(account.Mod);
+
+        // 额外启动参数（去重 -w，过滤掉已废弃的 -legacy）
+        if (!string.IsNullOrEmpty(account.Options))
+        {
+            var parts = account.Options.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var part in parts)
+            {
+                // 跳过 -w（已强制添加）和 -legacy（2026 已废弃）
+                if (part.Equals("-w", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                if (part.Equals("-legacy", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                sb.Append(' ').Append(part);
+            }
+        }
+
+        return sb.ToString();
+    }
+}
