@@ -181,7 +181,7 @@ public static class Launcher
                     continue;
                 if (part.Equals("-legacy", StringComparison.OrdinalIgnoreCase))
                     continue;
-                if (part.StartsWith('-', StringComparison.Ordinal))
+                if (part.StartsWith("-", StringComparison.Ordinal))
                     flags.Add(part);
 
                 sb.Append(' ').Append(part);
