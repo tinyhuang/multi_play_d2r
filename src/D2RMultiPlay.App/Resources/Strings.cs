@@ -40,7 +40,9 @@ internal sealed class Strings
     public string BtnReconnect => Get("BtnReconnect");
 
     public string ColId => Get("ColId");
+    public string ColEnabled => Get("ColEnabled");
     public string ColName => Get("ColName");
+    public string ColEmail => Get("ColEmail");
     public string ColRole => Get("ColRole");
     public string ColMod => Get("ColMod");
     public string ColStatus => Get("ColStatus");

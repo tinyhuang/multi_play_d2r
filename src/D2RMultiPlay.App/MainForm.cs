@@ -28,6 +28,11 @@ public partial class MainForm : Form
     private Button _btnAddAccount = null!;
     private Button _btnLayout = null!;
     private Button _btnSettings = null!;
+    private Button _btnLangZh = null!;
+    private Button _btnLangEn = null!;
+    private TextBox _txtD2rPath = null!;
+    private Button _btnBrowseD2r = null!;
+    private Label _lblD2rStatus = null!;
     private TextBox _txtHandlePath = null!;
     private Button _btnBrowseHandle = null!;
     private LinkLabel _lnkHandleDownload = null!;
@@ -106,7 +111,7 @@ public partial class MainForm : Form
         _grid = new DataGridView
         {
             Dock = DockStyle.Fill,
-            ReadOnly = true,
+            ReadOnly = false,
             AllowUserToAddRows = false,
             AllowUserToDeleteRows = false,
             AllowUserToResizeRows = false,
@@ -118,19 +123,23 @@ public partial class MainForm : Form
             BorderStyle = BorderStyle.None
         };
 
-        _grid.Columns.AddRange(
-            new DataGridViewTextBoxColumn { Name = "colId", HeaderText = Strings.ColId, Width = 40, FillWeight = 8 },
-            new DataGridViewCheckBoxColumn { Name = "colEnabled", HeaderText = "✓", Width = 30, FillWeight = 5 },
-            new DataGridViewTextBoxColumn { Name = "colName", HeaderText = Strings.ColName, FillWeight = 20 },
-            new DataGridViewTextBoxColumn { Name = "colRole", HeaderText = Strings.ColRole, Width = 80, FillWeight = 12 },
-            new DataGridViewTextBoxColumn { Name = "colServer", HeaderText = SServerHeader(), FillWeight = 20 },
-            new DataGridViewTextBoxColumn { Name = "colMod", HeaderText = Strings.ColMod, Width = 80, FillWeight = 12 },
-            new DataGridViewTextBoxColumn { Name = "colStatus", HeaderText = Strings.ColStatus, Width = 80, FillWeight = 12 },
-            new DataGridViewButtonColumn { Name = "colEdit", HeaderText = "", Text = Strings.BtnEdit, UseColumnTextForButtonValue = true, Width = 80, FillWeight = 10 },
-            new DataGridViewButtonColumn { Name = "colLaunch", HeaderText = "", Text = Strings.BtnLaunch, UseColumnTextForButtonValue = true, Width = 90, FillWeight = 12 }
-        );
+        var colId = new DataGridViewTextBoxColumn { Name = "colId", HeaderText = Strings.ColId, Width = 40, FillWeight = 7, ReadOnly = true };
+        var colEnabled = new DataGridViewCheckBoxColumn { Name = "colEnabled", HeaderText = "启用", Width = 55, FillWeight = 8, ReadOnly = false };
+        var colName = new DataGridViewTextBoxColumn { Name = "colName", HeaderText = Strings.ColName, FillWeight = 16, ReadOnly = true };
+        var colUser = new DataGridViewTextBoxColumn { Name = "colUser", HeaderText = Strings.ColEmail, FillWeight = 22, ReadOnly = true };
+        var colRole = new DataGridViewTextBoxColumn { Name = "colRole", HeaderText = Strings.ColRole, Width = 80, FillWeight = 10, ReadOnly = true };
+        var colServer = new DataGridViewTextBoxColumn { Name = "colServer", HeaderText = SServerHeader(), FillWeight = 17, ReadOnly = true };
+        var colMod = new DataGridViewTextBoxColumn { Name = "colMod", HeaderText = Strings.ColMod, Width = 80, FillWeight = 9, ReadOnly = true };
+        var colStatus = new DataGridViewTextBoxColumn { Name = "colStatus", HeaderText = Strings.ColStatus, Width = 80, FillWeight = 9, ReadOnly = true };
+        var colEdit = new DataGridViewButtonColumn { Name = "colEdit", HeaderText = "", Text = Strings.BtnEdit, UseColumnTextForButtonValue = true, Width = 80, FillWeight = 10, ReadOnly = true };
+        var colLaunch = new DataGridViewButtonColumn { Name = "colLaunch", HeaderText = "", Text = Strings.BtnLaunch, UseColumnTextForButtonValue = true, Width = 90, FillWeight = 12, ReadOnly = true };
+
+        _grid.Columns.AddRange(colId, colEnabled, colName, colUser, colRole, colServer, colMod, colStatus, colEdit, colLaunch);
 
         _grid.CellClick += Grid_CellClick;
+        _grid.CellContentClick += Grid_CellContentClick;
+        _grid.CurrentCellDirtyStateChanged += Grid_CurrentCellDirtyStateChanged;
+        _grid.CellValueChanged += Grid_CellValueChanged;
         _splitContainer.Panel1.Controls.Add(_grid);
     }
 
@@ -170,13 +179,20 @@ public partial class MainForm : Form
         _btnSettings = CreateTopButton($"{Strings.MenuGlobalSettings}");
         _btnSettings.Click += (_, _) => ShowGlobalSettings();
 
-        panel.Controls.AddRange([_btnLaunchAll, _btnStopAll, _btnAddAccount, _btnLayout, _btnSettings]);
+        _btnLangZh = CreateTopButton("中文");
+        _btnLangZh.Click += (_, _) => SwitchLanguage("zh-CN");
+
+        _btnLangEn = CreateTopButton("English");
+        _btnLangEn.Click += (_, _) => SwitchLanguage("en-US");
+
+        panel.Controls.AddRange([_btnLaunchAll, _btnStopAll, _btnAddAccount, _btnLayout, _btnSettings, _btnLangZh, _btnLangEn]);
 
         var quickConfig = new TableLayoutPanel
         {
             Dock = DockStyle.Top,
             AutoSize = true,
             ColumnCount = 5,
+            RowCount = 2,
             Margin = new Padding(0),
             Padding = new Padding(0)
         };
@@ -188,26 +204,47 @@ public partial class MainForm : Form
 
         quickConfig.Controls.Add(new Label
         {
-            Text = "handle.exe 路径 / Path",
+            Text = "D2R.exe 路径 / Path (必填 Required)",
             Anchor = AnchorStyles.Left,
             AutoSize = true,
             Margin = new Padding(0, 7, 8, 0)
         }, 0, 0);
 
+        _txtD2rPath = new TextBox { Dock = DockStyle.Fill, Margin = new Padding(0, 3, 6, 3) };
+        _txtD2rPath.Leave += (_, _) => ApplyQuickD2rPath();
+        quickConfig.Controls.Add(_txtD2rPath, 1, 0);
+
+        _btnBrowseD2r = new Button { Text = "...", AutoSize = true, Margin = new Padding(0, 2, 6, 2) };
+        _btnBrowseD2r.Click += (_, _) => BrowseD2rExe();
+        quickConfig.Controls.Add(_btnBrowseD2r, 2, 0);
+
+        quickConfig.Controls.Add(new Label { Text = "", AutoSize = true, Margin = new Padding(0, 8, 10, 0) }, 3, 0);
+
+        _lblD2rStatus = new Label { AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 7, 0, 0) };
+        quickConfig.Controls.Add(_lblD2rStatus, 4, 0);
+
+        quickConfig.Controls.Add(new Label
+        {
+            Text = "handle.exe 路径 / Path",
+            Anchor = AnchorStyles.Left,
+            AutoSize = true,
+            Margin = new Padding(0, 7, 8, 0)
+        }, 0, 1);
+
         _txtHandlePath = new TextBox { Dock = DockStyle.Fill, Margin = new Padding(0, 3, 6, 3) };
         _txtHandlePath.Leave += (_, _) => ApplyQuickHandlePath();
-        quickConfig.Controls.Add(_txtHandlePath, 1, 0);
+        quickConfig.Controls.Add(_txtHandlePath, 1, 1);
 
         _btnBrowseHandle = new Button { Text = "...", AutoSize = true, Margin = new Padding(0, 2, 6, 2) };
         _btnBrowseHandle.Click += (_, _) => BrowseHandleExe();
-        quickConfig.Controls.Add(_btnBrowseHandle, 2, 0);
+        quickConfig.Controls.Add(_btnBrowseHandle, 2, 1);
 
         _lnkHandleDownload = new LinkLabel { Text = "下载 handle.exe", AutoSize = true, Margin = new Padding(0, 8, 10, 0) };
         _lnkHandleDownload.LinkClicked += (_, _) => OpenHandleDownload();
-        quickConfig.Controls.Add(_lnkHandleDownload, 3, 0);
+        quickConfig.Controls.Add(_lnkHandleDownload, 3, 1);
 
         _lblHandleStatus = new Label { AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 7, 0, 0) };
-        quickConfig.Controls.Add(_lblHandleStatus, 4, 0);
+        quickConfig.Controls.Add(_lblHandleStatus, 4, 1);
 
         container.Controls.Add(panel, 0, 0);
         container.Controls.Add(quickConfig, 0, 1);
@@ -280,7 +317,8 @@ public partial class MainForm : Form
             _grid.Rows.Add(
                 acct.Id,
                 acct.Enabled,
-                string.IsNullOrEmpty(acct.Name) ? acct.User : acct.Name,
+                string.IsNullOrEmpty(acct.Name) ? $"Account {acct.Id}" : acct.Name,
+                acct.User,
                 acct.Role,
                 ResolveServerText(acct),
                 acct.Mod,
@@ -307,6 +345,37 @@ public partial class MainForm : Form
         }
     }
 
+    private void Grid_CellContentClick(object? sender, DataGridViewCellEventArgs e)
+    {
+        if (e.RowIndex < 0 || _grid.Columns[e.ColumnIndex].Name != "colEnabled")
+            return;
+
+        _grid.CommitEdit(DataGridViewDataErrorContexts.Commit);
+    }
+
+    private void Grid_CurrentCellDirtyStateChanged(object? sender, EventArgs e)
+    {
+        if (_grid.IsCurrentCellDirty)
+            _grid.CommitEdit(DataGridViewDataErrorContexts.Commit);
+    }
+
+    private void Grid_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
+    {
+        if (e.RowIndex < 0 || e.RowIndex >= _config.Accounts.Count)
+            return;
+        if (_grid.Columns[e.ColumnIndex].Name != "colEnabled")
+            return;
+
+        bool enabled = Convert.ToBoolean(_grid.Rows[e.RowIndex].Cells["colEnabled"].Value);
+        var acct = _config.Accounts[e.RowIndex];
+        if (acct.Enabled == enabled)
+            return;
+
+        acct.Enabled = enabled;
+        SaveConfig();
+        RefreshGrid();
+    }
+
     // ======== 启动逻辑 ========
 
     private async Task LaunchAllAsync()
@@ -314,8 +383,8 @@ public partial class MainForm : Form
         var enabledAccounts = _config.Accounts.Where(a => a.Enabled).ToList();
         if (enabledAccounts.Count == 0) return;
 
-        // 检查 handle.exe
-        if (!CheckHandleExe()) return;
+        // 检查启动前置条件
+        if (!CheckLaunchPrerequisites()) return;
 
         _btnLaunchAll.Enabled = false;
         try
@@ -365,7 +434,7 @@ public partial class MainForm : Form
         // 不是第一个实例时清理互斥量
         if (_guard.GetAllStates().Any(s => s.IsAlive))
         {
-            if (!CheckHandleExe()) return;
+            if (!CheckLaunchPrerequisites()) return;
             var (_, handleLog) = HandleCli.FindAndCloseAll(
                 _config.Global.HandleExePath, HandleCli.DefaultMutexName);
             foreach (var line in handleLog) Log(line);
@@ -583,18 +652,24 @@ public partial class MainForm : Form
         _btnAddAccount.Text = Strings.BtnAddAccount;
         _btnLayout.Text = Strings.MenuLayout;
         _btnSettings.Text = Strings.MenuGlobalSettings;
+        _btnLangZh.Text = "中文";
+        _btnLangEn.Text = "English";
         _lnkHandleDownload.Text = "下载 handle.exe / Download";
 
-        if (_grid.Columns.Count >= 8)
+        if (_grid.Columns.Count >= 10)
         {
             _grid.Columns["colId"].HeaderText = Strings.ColId;
+            _grid.Columns["colEnabled"].HeaderText = Strings.ColEnabled;
             _grid.Columns["colName"].HeaderText = Strings.ColName;
+            _grid.Columns["colUser"].HeaderText = Strings.ColEmail;
             _grid.Columns["colRole"].HeaderText = Strings.ColRole;
             _grid.Columns["colServer"].HeaderText = SServerHeader();
             _grid.Columns["colMod"].HeaderText = Strings.ColMod;
             _grid.Columns["colStatus"].HeaderText = Strings.ColStatus;
         }
 
+        UpdateLanguageButtonState();
+        UpdateD2rStatus();
         UpdateHandleStatus();
 
         // 重建菜单以应用新语言
@@ -612,9 +687,29 @@ public partial class MainForm : Form
 
     private void SyncQuickSettingsFromConfig()
     {
+        if (_txtD2rPath != null)
+            _txtD2rPath.Text = _config.Global.D2rExePath;
         if (_txtHandlePath != null)
             _txtHandlePath.Text = _config.Global.HandleExePath;
+        UpdateD2rStatus();
         UpdateHandleStatus();
+    }
+
+    private void ApplyQuickD2rPath()
+    {
+        if (_txtD2rPath == null)
+            return;
+
+        var value = _txtD2rPath.Text.Trim();
+        if (string.Equals(value, _config.Global.D2rExePath, StringComparison.Ordinal))
+        {
+            UpdateD2rStatus();
+            return;
+        }
+
+        _config.Global.D2rExePath = value;
+        SaveConfig();
+        UpdateD2rStatus();
     }
 
     private void ApplyQuickHandlePath()
@@ -649,6 +744,21 @@ public partial class MainForm : Form
         ApplyQuickHandlePath();
     }
 
+    private void BrowseD2rExe()
+    {
+        using var ofd = new OpenFileDialog
+        {
+            Filter = "D2R.exe|D2R.exe|Executable|*.exe|All Files|*.*",
+            Title = "Select D2R.exe"
+        };
+
+        if (ofd.ShowDialog(this) != DialogResult.OK)
+            return;
+
+        _txtD2rPath.Text = ofd.FileName;
+        ApplyQuickD2rPath();
+    }
+
     private static void OpenHandleDownload()
     {
         try
@@ -666,8 +776,52 @@ public partial class MainForm : Form
             return;
 
         bool ok = HandleCli.Exists(_config.Global.HandleExePath);
-        _lblHandleStatus.Text = ok ? "已配置" : "未配置";
+        _lblHandleStatus.Text = ok ? "已配置 / OK" : "未配置(必填) / Required";
         _lblHandleStatus.ForeColor = ok ? Color.SeaGreen : Color.Firebrick;
+        _txtHandlePath.BackColor = ok ? SystemColors.Window : Color.MistyRose;
+    }
+
+    private void UpdateD2rStatus()
+    {
+        if (_lblD2rStatus == null)
+            return;
+
+        bool ok = File.Exists(_config.Global.D2rExePath);
+        _lblD2rStatus.Text = ok ? "已配置 / OK" : "未配置(必填) / Required";
+        _lblD2rStatus.ForeColor = ok ? Color.SeaGreen : Color.Firebrick;
+        _txtD2rPath.BackColor = ok ? SystemColors.Window : Color.MistyRose;
+    }
+
+    private bool CheckLaunchPrerequisites()
+    {
+        ApplyQuickD2rPath();
+        ApplyQuickHandlePath();
+
+        var missing = new List<string>();
+        if (!File.Exists(_config.Global.D2rExePath))
+            missing.Add("D2R.exe 路径");
+        if (!HandleCli.Exists(_config.Global.HandleExePath))
+            missing.Add("handle.exe 路径");
+
+        UpdateD2rStatus();
+        UpdateHandleStatus();
+
+        if (missing.Count == 0)
+            return true;
+
+        MessageBox.Show(
+            "以下前置条件未配置正确：\n- " + string.Join("\n- ", missing) + "\n\n请先在主界面补全后再启动。",
+            Strings.Warning,
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Warning);
+        return false;
+    }
+
+    private void UpdateLanguageButtonState()
+    {
+        bool zh = string.Equals(_config.Global.UiCulture, "zh-CN", StringComparison.OrdinalIgnoreCase);
+        _btnLangZh.Font = new Font(_btnLangZh.Font, zh ? FontStyle.Bold : FontStyle.Regular);
+        _btnLangEn.Font = new Font(_btnLangEn.Font, zh ? FontStyle.Regular : FontStyle.Bold);
     }
 
     private string ResolveServerText(AccountConfig acct)
@@ -701,6 +855,12 @@ public partial class MainForm : Form
 
     private void EnsureAccountLayout(AccountConfig acct)
     {
+        if (acct.Role.Equals("slave", StringComparison.OrdinalIgnoreCase))
+        {
+            acct.Layout.W = 1280;
+            acct.Layout.H = 720;
+        }
+
         if (acct.Layout.W <= 0)
             acct.Layout.W = 1280;
         if (acct.Layout.H <= 0)

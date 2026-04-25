@@ -138,9 +138,11 @@ public static class Launcher
     {
         var sb = new StringBuilder();
         sb.Append('"').Append(exePath).Append('"');
+        var flags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         // 基础参数
         sb.Append(" -w"); // 窗口模式（强制）
+        flags.Add("-w");
 
         // 账号凭据
         if (!string.IsNullOrEmpty(account.User))
@@ -179,9 +181,19 @@ public static class Launcher
                     continue;
                 if (part.Equals("-legacy", StringComparison.OrdinalIgnoreCase))
                     continue;
+                if (part.StartsWith('-', StringComparison.Ordinal))
+                    flags.Add(part);
 
                 sb.Append(' ').Append(part);
             }
+        }
+
+        // slave 账号强制低画质参数，并且保持在命令行末尾
+        if (account.Role.Equals("slave", StringComparison.OrdinalIgnoreCase))
+        {
+            AppendFlagOnce(sb, flags, "-txt");
+            AppendFlagOnce(sb, flags, "-lq");
+            AppendFlagOnce(sb, flags, "-ns");
         }
 
         return sb.ToString();
@@ -208,5 +220,14 @@ public static class Launcher
             sb.Append('"').Append(value).Append('"');
         else
             sb.Append(value);
+    }
+
+    private static void AppendFlagOnce(StringBuilder sb, HashSet<string> flags, string flag)
+    {
+        if (flags.Contains(flag))
+            return;
+
+        sb.Append(' ').Append(flag);
+        flags.Add(flag);
     }
 }

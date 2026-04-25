@@ -12,7 +12,7 @@ public sealed class GlobalSettingsForm : Form
 
     private TextBox _txtD2rExe = null!;
     private TextBox _txtHandleExe = null!;
-    private TextBox _txtServer = null!;
+    private ComboBox _cboServer = null!;
     private NumericUpDown _nudInterval = null!;
     private Button _btnOk = null!;
     private Button _btnCancel = null!;
@@ -29,18 +29,29 @@ public sealed class GlobalSettingsForm : Form
     private void BuildUI()
     {
         Text = S.GlobalSettingsTitle;
-        Size = new Size(560, 320);
+        Size = new Size(620, 360);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
         StartPosition = FormStartPosition.CenterParent;
         Font = new Font("Segoe UI", 9F);
 
+        var root = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 2,
+            Padding = new Padding(0)
+        };
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
         var table = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 3,
-            Padding = new Padding(12)
+            Padding = new Padding(12),
+            AutoScroll = true
         };
         table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150));
         table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -68,9 +79,10 @@ public sealed class GlobalSettingsForm : Form
 
         // 服务器
         table.Controls.Add(new Label { Text = S.LblServer, Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
-        _txtServer = new TextBox { Dock = DockStyle.Fill };
-        table.Controls.Add(_txtServer, 1, row);
-        table.SetColumnSpan(_txtServer, 2);
+        _cboServer = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
+        _cboServer.Items.AddRange(BattleNetServers.All);
+        table.Controls.Add(_cboServer, 1, row);
+        table.SetColumnSpan(_cboServer, 2);
         row++;
 
         var hintLabel = new Label
@@ -99,8 +111,8 @@ public sealed class GlobalSettingsForm : Form
         // 按钮
         var btnPanel = new FlowLayoutPanel
         {
-            Dock = DockStyle.Bottom,
-            Height = 45,
+            Dock = DockStyle.Fill,
+            AutoSize = true,
             FlowDirection = FlowDirection.RightToLeft,
             Padding = new Padding(8)
         };
@@ -110,8 +122,9 @@ public sealed class GlobalSettingsForm : Form
         _btnOk.Click += BtnOk_Click;
         btnPanel.Controls.AddRange([_btnCancel, _btnOk]);
 
-        Controls.Add(table);
-        Controls.Add(btnPanel);
+        root.Controls.Add(table, 0, 0);
+        root.Controls.Add(btnPanel, 0, 1);
+        Controls.Add(root);
         AcceptButton = _btnOk;
         CancelButton = _btnCancel;
     }
@@ -120,7 +133,10 @@ public sealed class GlobalSettingsForm : Form
     {
         _txtD2rExe.Text = s.D2rExePath;
         _txtHandleExe.Text = s.HandleExePath;
-        _txtServer.Text = s.BattleNetAddress;
+        var server = string.IsNullOrWhiteSpace(s.BattleNetAddress) ? BattleNetServers.Korea : s.BattleNetAddress.Trim();
+        if (!_cboServer.Items.Contains(server))
+            _cboServer.Items.Add(server);
+        _cboServer.SelectedItem = server;
         _nudInterval.Value = Math.Clamp(s.LaunchIntervalSec, 1, 60);
     }
 
@@ -130,7 +146,7 @@ public sealed class GlobalSettingsForm : Form
         {
             D2rExePath = _txtD2rExe.Text.Trim(),
             HandleExePath = _txtHandleExe.Text.Trim(),
-            BattleNetAddress = _txtServer.Text.Trim(),
+            BattleNetAddress = _cboServer.Text.Trim(),
             LaunchIntervalSec = (int)_nudInterval.Value,
             MutexName = Result.MutexName,
             ProfilesRoot = Result.ProfilesRoot,

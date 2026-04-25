@@ -17,7 +17,7 @@ public sealed class AccountEditorForm : Form
     private TextBox _txtUser = null!;
     private TextBox _txtPassword = null!;
     private ComboBox _cboRole = null!;
-    private TextBox _txtServer = null!;
+    private ComboBox _cboServer = null!;
     private TextBox _txtMod = null!;
     private TextBox _txtOptions = null!;
     private TextBox _txtExePath = null!;
@@ -44,12 +44,21 @@ public sealed class AccountEditorForm : Form
     private void BuildUI()
     {
         Text = S.AccountEditorTitle;
-        Size = new Size(720, 620);
+        Size = new Size(760, 680);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
         StartPosition = FormStartPosition.CenterParent;
         Font = new Font("Segoe UI", 9F);
+
+        var root = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 2
+        };
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
         var table = new TableLayoutPanel
         {
@@ -101,9 +110,11 @@ public sealed class AccountEditorForm : Form
 
         // 服务器（账号级覆盖）
         table.Controls.Add(new Label { Text = "服务器地址 / Server Override", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
-        _txtServer = new TextBox { Dock = DockStyle.Fill, PlaceholderText = "留空则使用全局服务器 / Empty = use global default" };
-        table.Controls.Add(_txtServer, 1, row);
-        table.SetColumnSpan(_txtServer, 2);
+        _cboServer = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
+        _cboServer.Items.Add("(使用全局默认) / (Use Global Default)");
+        _cboServer.Items.AddRange(BattleNetServers.All);
+        table.Controls.Add(_cboServer, 1, row);
+        table.SetColumnSpan(_cboServer, 2);
         row++;
 
         // Mod
@@ -181,8 +192,8 @@ public sealed class AccountEditorForm : Form
         // 按钮
         var btnPanel = new FlowLayoutPanel
         {
-            Dock = DockStyle.Bottom,
-            Height = 45,
+            Dock = DockStyle.Fill,
+            AutoSize = true,
             FlowDirection = FlowDirection.RightToLeft,
             Padding = new Padding(8)
         };
@@ -192,16 +203,25 @@ public sealed class AccountEditorForm : Form
         _btnOk.Click += BtnOk_Click;
         btnPanel.Controls.AddRange([_btnCancel, _btnOk]);
 
-        Controls.Add(table);
-        Controls.Add(btnPanel);
+        root.Controls.Add(table, 0, 0);
+        root.Controls.Add(btnPanel, 0, 1);
+        Controls.Add(root);
         AcceptButton = _btnOk;
         CancelButton = _btnCancel;
 
         _txtName.TextChanged += (_, _) => UpdatePreview();
         _txtUser.TextChanged += (_, _) => UpdatePreview();
         _txtPassword.TextChanged += (_, _) => UpdatePreview();
-        _cboRole.SelectedIndexChanged += (_, _) => UpdatePreview();
-        _txtServer.TextChanged += (_, _) => UpdatePreview();
+        _cboRole.SelectedIndexChanged += (_, _) =>
+        {
+            if (_cboRole.SelectedIndex == 1)
+            {
+                _nudWidth.Value = 1280;
+                _nudHeight.Value = 720;
+            }
+            UpdatePreview();
+        };
+        _cboServer.SelectedIndexChanged += (_, _) => UpdatePreview();
         _txtMod.TextChanged += (_, _) => UpdatePreview();
         _txtOptions.TextChanged += (_, _) => UpdatePreview();
         _txtExePath.TextChanged += (_, _) => UpdatePreview();
@@ -215,7 +235,17 @@ public sealed class AccountEditorForm : Form
         _txtName.Text = _original.Name;
         _txtUser.Text = _original.User;
         _cboRole.SelectedIndex = _original.Role.Equals("slave", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
-        _txtServer.Text = _original.ServerAddress;
+        if (string.IsNullOrWhiteSpace(_original.ServerAddress))
+        {
+            _cboServer.SelectedIndex = 0;
+        }
+        else
+        {
+            var server = _original.ServerAddress.Trim();
+            if (!_cboServer.Items.Contains(server))
+                _cboServer.Items.Add(server);
+            _cboServer.SelectedItem = server;
+        }
         _txtMod.Text = _original.Mod;
         _txtOptions.Text = _original.Options;
         _txtExePath.Text = _original.ExePathOverride;
@@ -244,7 +274,7 @@ public sealed class AccountEditorForm : Form
             User = _txtUser.Text.Trim(),
             PassEnc = passEnc,
             Role = _cboRole.SelectedIndex == 1 ? "slave" : "master",
-            ServerAddress = _txtServer.Text.Trim(),
+            ServerAddress = ResolveSelectedServer(),
             Mod = _txtMod.Text.Trim(),
             Options = _txtOptions.Text.Trim(),
             ExePathOverride = _txtExePath.Text.Trim(),
@@ -258,6 +288,12 @@ public sealed class AccountEditorForm : Form
                 Borderless = false
             }
         };
+
+        if (Result.Role.Equals("slave", StringComparison.OrdinalIgnoreCase))
+        {
+            Result.Layout.W = 1280;
+            Result.Layout.H = 720;
+        }
 
         DialogResult = DialogResult.OK;
         Close();
@@ -276,7 +312,7 @@ public sealed class AccountEditorForm : Form
             User = _txtUser.Text.Trim(),
             PassEnc = _original.PassEnc,
             Role = _cboRole.SelectedIndex == 1 ? "slave" : "master",
-            ServerAddress = _txtServer.Text.Trim(),
+            ServerAddress = ResolveSelectedServer(),
             Mod = _txtMod.Text.Trim(),
             Options = _txtOptions.Text.Trim(),
             ExePathOverride = _txtExePath.Text.Trim(),
@@ -291,6 +327,12 @@ public sealed class AccountEditorForm : Form
             }
         };
 
+        if (previewAccount.Role.Equals("slave", StringComparison.OrdinalIgnoreCase))
+        {
+            previewAccount.Layout.W = 1280;
+            previewAccount.Layout.H = 720;
+        }
+
         string? passwordOverride = string.IsNullOrWhiteSpace(_txtPassword.Text)
             ? null
             : _txtPassword.Text;
@@ -298,6 +340,14 @@ public sealed class AccountEditorForm : Form
         _txtPreview.Text = Launcher.BuildPreviewCommandLine(previewAccount, _global, passwordOverride)
             + Environment.NewLine + Environment.NewLine
             + "窗口位置请在主界面的显示器布局中设置。";
+    }
+
+    private string ResolveSelectedServer()
+    {
+        if (_cboServer.SelectedIndex <= 0)
+            return string.Empty;
+
+        return _cboServer.Text.Trim();
     }
 
     private static void BrowseExe(TextBox target)

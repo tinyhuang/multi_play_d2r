@@ -45,19 +45,29 @@ public sealed class MonitorLayoutForm : Form
         StartPosition = FormStartPosition.CenterParent;
         Font = new Font("Segoe UI", 9F);
 
+        var root = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 3
+        };
+        root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
         // 顶部按钮栏
         var toolbar = new FlowLayoutPanel
         {
             Dock = DockStyle.Top,
-            Height = 40,
+            AutoSize = true,
             FlowDirection = FlowDirection.LeftToRight,
             Padding = new Padding(4)
         };
 
-        _btnRefresh = new Button { Text = S.BtnRefreshMonitors, Width = 130 };
+        _btnRefresh = new Button { Text = S.BtnRefreshMonitors, AutoSize = true, Padding = new Padding(10, 4, 10, 4) };
         _btnRefresh.Click += (_, _) => RefreshMonitors();
 
-        _btnAutoGrid = new Button { Text = S.BtnAutoGrid, Width = 130 };
+        _btnAutoGrid = new Button { Text = S.BtnAutoGrid, AutoSize = true, Padding = new Padding(10, 4, 10, 4) };
         _btnAutoGrid.Click += (_, _) => AutoGridLayout();
 
         toolbar.Controls.AddRange([_btnRefresh, _btnAutoGrid]);
@@ -74,8 +84,8 @@ public sealed class MonitorLayoutForm : Form
         // 底部按钮
         var btnPanel = new FlowLayoutPanel
         {
-            Dock = DockStyle.Bottom,
-            Height = 45,
+            Dock = DockStyle.Fill,
+            AutoSize = true,
             FlowDirection = FlowDirection.RightToLeft,
             Padding = new Padding(8)
         };
@@ -85,9 +95,10 @@ public sealed class MonitorLayoutForm : Form
         _btnOk.Click += BtnOk_Click;
         btnPanel.Controls.AddRange([_btnCancel, _btnOk]);
 
-        Controls.Add(_canvas);
-        Controls.Add(toolbar);
-        Controls.Add(btnPanel);
+        root.Controls.Add(toolbar, 0, 0);
+        root.Controls.Add(_canvas, 0, 1);
+        root.Controls.Add(btnPanel, 0, 2);
+        Controls.Add(root);
         AcceptButton = _btnOk;
         CancelButton = _btnCancel;
     }

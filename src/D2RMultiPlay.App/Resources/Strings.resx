@@ -53,7 +53,7 @@
   <data name="MenuLanguage" xml:space="preserve"><value>&amp;Language</value></data>
   <data name="MenuHelp" xml:space="preserve"><value>&amp;Help</value></data>
   <data name="MenuAbout" xml:space="preserve"><value>&amp;About</value></data>
-  <data name="MenuLayout" xml:space="preserve"><value>Monitor &amp;Layout</value></data>
+  <data name="MenuLayout" xml:space="preserve"><value>Game Window &amp;Layout</value></data>
 
   <data name="BtnLaunchAll" xml:space="preserve"><value>Launch All</value></data>
   <data name="BtnStopAll" xml:space="preserve"><value>Stop All</value></data>
@@ -64,7 +64,9 @@
   <data name="BtnReconnect" xml:space="preserve"><value>Reconnect</value></data>
 
   <data name="ColId" xml:space="preserve"><value>ID</value></data>
+  <data name="ColEnabled" xml:space="preserve"><value>Enabled</value></data>
   <data name="ColName" xml:space="preserve"><value>Name</value></data>
+  <data name="ColEmail" xml:space="preserve"><value>Battle.net Email</value></data>
   <data name="ColRole" xml:space="preserve"><value>Role</value></data>
   <data name="ColMod" xml:space="preserve"><value>Mod</value></data>
   <data name="ColStatus" xml:space="preserve"><value>Status</value></data>
@@ -100,7 +102,7 @@
   <data name="LblMutexName" xml:space="preserve"><value>Mutex Name:</value></data>
 
   <!-- ===== MonitorLayout ===== -->
-  <data name="MonitorLayoutTitle" xml:space="preserve"><value>Monitor Layout</value></data>
+  <data name="MonitorLayoutTitle" xml:space="preserve"><value>Game Window Layout</value></data>
   <data name="BtnAutoGrid" xml:space="preserve"><value>Auto Grid</value></data>
   <data name="BtnRefreshMonitors" xml:space="preserve"><value>Refresh Monitors</value></data>
 
