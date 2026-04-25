@@ -73,14 +73,15 @@ public sealed class GlobalSettingsForm : Form
         table.SetColumnSpan(_txtServer, 2);
         row++;
 
-        table.Controls.Add(new Label
+        var hintLabel = new Label
         {
             Text = "账号留空时会使用这里的默认服务器。",
             AutoSize = true,
             ForeColor = SystemColors.GrayText,
             Margin = new Padding(0, 0, 0, 8)
-        }, 1, row);
-        table.SetColumnSpan(table.GetControlFromPosition(1, row), 2);
+        };
+        table.Controls.Add(hintLabel, 1, row);
+        table.SetColumnSpan(hintLabel, 2);
         row++;
 
         // 启动间隔
