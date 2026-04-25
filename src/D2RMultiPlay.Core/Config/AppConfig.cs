@@ -45,7 +45,7 @@ public sealed class GlobalSettings
     /// <summary>账号 profile 存储根目录（默认 %APPDATA%\D2RMultiPlay\profiles）</summary>
     public string ProfilesRoot { get; set; } = "";
 
-    /// <summary>D2R 互斥量名称（暴雪若改名可在此自定义）</summary>
+    /// <summary>旧版本兼容字段；互斥量名称现已固定，不再对用户开放</summary>
     public string MutexName { get; set; } = "Check For Other Instances";
 
     /// <summary>挂机窗口 CPU 亲和性掩码（0=不限制）</summary>
@@ -108,6 +108,9 @@ public sealed class AccountConfig
     /// <summary>额外启动参数（如 -txt -ns -lq）</summary>
     public string Options { get; set; } = "";
 
+    /// <summary>账号专属服务器地址（留空使用全局 BattleNetAddress）</summary>
+    public string ServerAddress { get; set; } = "";
+
     /// <summary>独立游戏路径（留空使用全局 D2rExePath）</summary>
     public string ExePathOverride { get; set; } = "";
 
@@ -136,7 +139,7 @@ public sealed class WindowLayout
     public int H { get; set; } = 720;
 
     /// <summary>是否去边框</summary>
-    public bool Borderless { get; set; } = true;
+    public bool Borderless { get; set; }
 }
 
 /// <summary>

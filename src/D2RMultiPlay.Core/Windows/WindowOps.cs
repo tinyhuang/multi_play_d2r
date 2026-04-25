@@ -71,6 +71,20 @@ public static class WindowOps
     }
 
     /// <summary>
+    /// 恢复标准窗口边框，便于手动移动和关闭
+    /// </summary>
+    public static void RestoreBorder(IntPtr hWnd)
+    {
+        var style = (uint)(long)NativeMethods.GetWindowLongPtr(hWnd, WinConst.GWL_STYLE);
+        style |= WinConst.WS_CAPTION | WinConst.WS_THICKFRAME | WinConst.WS_MINIMIZE
+                 | WinConst.WS_MAXIMIZE | WinConst.WS_SYSMENU;
+        NativeMethods.SetWindowLongPtr(hWnd, WinConst.GWL_STYLE, (IntPtr)style);
+
+        NativeMethods.SetWindowPos(hWnd, IntPtr.Zero, 0, 0, 0, 0,
+            WinConst.SWP_FRAMECHANGED | WinConst.SWP_NOZORDER | 0x0001 /*SWP_NOMOVE*/ | 0x0002 /*SWP_NOSIZE*/);
+    }
+
+    /// <summary>
     /// 将窗口移动到指定位置和大小
     /// </summary>
     public static void MoveWindow(IntPtr hWnd, int x, int y, int w, int h)
@@ -91,7 +105,12 @@ public static class WindowOps
 
         if (layout.Borderless)
             RemoveBorder(hWnd);
+        else
+            RestoreBorder(hWnd);
 
+        // 首次落位后再补一轮，覆盖游戏启动后可能的自动居中行为。
+        MoveWindow(hWnd, layout.X, layout.Y, layout.W, layout.H);
+        Thread.Sleep(700);
         MoveWindow(hWnd, layout.X, layout.Y, layout.W, layout.H);
         return true;
     }

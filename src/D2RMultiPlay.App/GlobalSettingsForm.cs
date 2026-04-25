@@ -14,7 +14,6 @@ public sealed class GlobalSettingsForm : Form
     private TextBox _txtHandleExe = null!;
     private TextBox _txtServer = null!;
     private NumericUpDown _nudInterval = null!;
-    private TextBox _txtMutexName = null!;
     private Button _btnOk = null!;
     private Button _btnCancel = null!;
 
@@ -30,7 +29,7 @@ public sealed class GlobalSettingsForm : Form
     private void BuildUI()
     {
         Text = S.GlobalSettingsTitle;
-        Size = new Size(520, 350);
+        Size = new Size(560, 320);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
@@ -74,6 +73,16 @@ public sealed class GlobalSettingsForm : Form
         table.SetColumnSpan(_txtServer, 2);
         row++;
 
+        table.Controls.Add(new Label
+        {
+            Text = "账号留空时会使用这里的默认服务器。",
+            AutoSize = true,
+            ForeColor = SystemColors.GrayText,
+            Margin = new Padding(0, 0, 0, 8)
+        }, 1, row);
+        table.SetColumnSpan(table.GetControlFromPosition(1, row), 2);
+        row++;
+
         // 启动间隔
         table.Controls.Add(new Label { Text = S.LblInterval, Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
         _nudInterval = new NumericUpDown
@@ -84,13 +93,6 @@ public sealed class GlobalSettingsForm : Form
         };
         table.Controls.Add(_nudInterval, 1, row);
         table.SetColumnSpan(_nudInterval, 2);
-        row++;
-
-        // 互斥量名
-        table.Controls.Add(new Label { Text = S.LblMutexName, Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
-        _txtMutexName = new TextBox { Dock = DockStyle.Fill };
-        table.Controls.Add(_txtMutexName, 1, row);
-        table.SetColumnSpan(_txtMutexName, 2);
         row++;
 
         // 按钮
@@ -119,7 +121,6 @@ public sealed class GlobalSettingsForm : Form
         _txtHandleExe.Text = s.HandleExePath;
         _txtServer.Text = s.BattleNetAddress;
         _nudInterval.Value = Math.Clamp(s.LaunchIntervalSec, 1, 60);
-        _txtMutexName.Text = s.MutexName;
     }
 
     private void BtnOk_Click(object? sender, EventArgs e)
@@ -130,7 +131,7 @@ public sealed class GlobalSettingsForm : Form
             HandleExePath = _txtHandleExe.Text.Trim(),
             BattleNetAddress = _txtServer.Text.Trim(),
             LaunchIntervalSec = (int)_nudInterval.Value,
-            MutexName = _txtMutexName.Text.Trim(),
+            MutexName = Result.MutexName,
             ProfilesRoot = Result.ProfilesRoot,
             SlaveAffinityMask = Result.SlaveAffinityMask,
             UiCulture = Result.UiCulture

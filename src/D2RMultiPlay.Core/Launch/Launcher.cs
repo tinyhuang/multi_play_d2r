@@ -43,9 +43,7 @@ public static class Launcher
     public static LaunchResult Launch(AccountConfig account, GlobalSettings global, string? presetPath = null)
     {
         // 解析游戏路径：账号独立路径 > 全局路径
-        var exePath = !string.IsNullOrWhiteSpace(account.ExePathOverride)
-            ? account.ExePathOverride
-            : global.D2rExePath;
+        var exePath = ResolveExePath(account, global);
 
         if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
         {
@@ -66,7 +64,7 @@ public static class Launcher
         EnvBlockBuilder.EnsureProfileDir(fakeProfile, presetPath);
 
         // 构造命令行
-        var cmdLine = BuildCommandLine(exePath, account, global);
+        var cmdLine = BuildCommandLine(exePath, account, global, passwordOverride: null, maskStoredPassword: false);
 
         // 构造环境块（注入 USERPROFILE）
         var (envPtr, envHandle) = EnvBlockBuilder.Build(fakeProfile);
@@ -120,9 +118,23 @@ public static class Launcher
     }
 
     /// <summary>
+    /// 构造用于 UI 展示的预览命令行
+    /// </summary>
+    public static string BuildPreviewCommandLine(AccountConfig account, GlobalSettings global, string? passwordOverride = null)
+    {
+        var exePath = ResolveExePath(account, global);
+        return BuildCommandLine(exePath, account, global, passwordOverride, maskStoredPassword: true);
+    }
+
+    /// <summary>
     /// 构造 D2R 启动命令行
     /// </summary>
-    private static string BuildCommandLine(string exePath, AccountConfig account, GlobalSettings global)
+    private static string BuildCommandLine(
+        string exePath,
+        AccountConfig account,
+        GlobalSettings global,
+        string? passwordOverride,
+        bool maskStoredPassword)
     {
         var sb = new StringBuilder();
         sb.Append('"').Append(exePath).Append('"');
@@ -132,22 +144,29 @@ public static class Launcher
 
         // 账号凭据
         if (!string.IsNullOrEmpty(account.User))
-            sb.Append(" -username ").Append(account.User);
+            AppendSwitch(sb, "-username", account.User);
 
-        if (!string.IsNullOrEmpty(account.PassEnc))
+        if (!string.IsNullOrEmpty(passwordOverride))
+        {
+            AppendSwitch(sb, "-password", passwordOverride);
+        }
+        else if (!string.IsNullOrEmpty(account.PassEnc))
         {
             var pass = ConfigStore.DecryptPassword(account.PassEnc);
             if (!string.IsNullOrEmpty(pass))
-                sb.Append(" -password ").Append(pass);
+            {
+                AppendSwitch(sb, "-password", maskStoredPassword ? "******" : pass);
+            }
         }
 
         // 服务器
-        if (!string.IsNullOrEmpty(global.BattleNetAddress))
-            sb.Append(" -address ").Append(global.BattleNetAddress);
+        var serverAddress = ResolveServerAddress(account, global);
+        if (!string.IsNullOrEmpty(serverAddress))
+            AppendSwitch(sb, "-address", serverAddress);
 
         // Mod
         if (!string.IsNullOrEmpty(account.Mod))
-            sb.Append(" -mod ").Append(account.Mod);
+            AppendSwitch(sb, "-mod", account.Mod);
 
         // 额外启动参数（去重 -w，过滤掉已废弃的 -legacy）
         if (!string.IsNullOrEmpty(account.Options))
@@ -166,5 +185,28 @@ public static class Launcher
         }
 
         return sb.ToString();
+    }
+
+    private static string ResolveExePath(AccountConfig account, GlobalSettings global)
+    {
+        return !string.IsNullOrWhiteSpace(account.ExePathOverride)
+            ? account.ExePathOverride
+            : (!string.IsNullOrWhiteSpace(global.D2rExePath) ? global.D2rExePath : "D2R.exe");
+    }
+
+    private static string ResolveServerAddress(AccountConfig account, GlobalSettings global)
+    {
+        return !string.IsNullOrWhiteSpace(account.ServerAddress)
+            ? account.ServerAddress.Trim()
+            : global.BattleNetAddress.Trim();
+    }
+
+    private static void AppendSwitch(StringBuilder sb, string name, string value)
+    {
+        sb.Append(' ').Append(name).Append(' ');
+        if (value.Any(char.IsWhiteSpace))
+            sb.Append('"').Append(value).Append('"');
+        else
+            sb.Append(value);
     }
 }

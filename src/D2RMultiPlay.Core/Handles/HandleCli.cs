@@ -29,6 +29,9 @@ public static partial class HandleCli
     /// <summary>handle.exe 官方下载页面</summary>
     public const string DownloadUrl = "https://learn.microsoft.com/en-us/sysinternals/downloads/handle";
 
+    /// <summary>D2R 当前版本互斥量名</summary>
+    public const string DefaultMutexName = "Check For Other Instances";
+
     // 解析 handle.exe 输出的正则（示例行）:
     // D2R.exe           pid: 12345  type: Mutant    4C: \Sessions\1\BaseNamedObjects\Check For Other Instances
     // 我们需要提取: pid=12345, handleId=4C
@@ -47,10 +50,10 @@ public static partial class HandleCli
     /// 查找所有持有指定互斥量的进程句柄
     /// </summary>
     /// <param name="handleExePath">handle.exe 完整路径</param>
-    /// <param name="mutexName">互斥量名称（默认 "Check For Other Instances"）</param>
+    /// <param name="mutexName">互斥量名称（默认 D2R 当前版本值）</param>
     /// <returns>匹配的互斥量条目列表 + 原始输出</returns>
     public static (List<MutexEntry> Entries, HandleResult Result) FindMutex(
-        string handleExePath, string mutexName = "Check For Other Instances")
+        string handleExePath, string mutexName = DefaultMutexName)
     {
         // 构建命令行参数：-accepteula 首次自动接受许可证, -a 搜索所有句柄, -nobanner 抑制版本横幅
         var args = $"-accepteula -a \"{mutexName}\" -nobanner";
@@ -93,7 +96,7 @@ public static partial class HandleCli
     /// </summary>
     /// <returns>关闭的句柄数量 + 详细日志</returns>
     public static (int ClosedCount, List<string> Log) FindAndCloseAll(
-        string handleExePath, string mutexName = "Check For Other Instances")
+        string handleExePath, string mutexName = DefaultMutexName)
     {
         var log = new List<string>();
         var (entries, findResult) = FindMutex(handleExePath, mutexName);

@@ -9,6 +9,7 @@ using D2RMultiPlay.Core.Config;
 using D2RMultiPlay.Core.Guard;
 using D2RMultiPlay.Core.Handles;
 using D2RMultiPlay.Core.Launch;
+using D2RMultiPlay.Core.Monitors;
 using D2RMultiPlay.Core.Windows;
 
 namespace D2RMultiPlay.App;
@@ -25,6 +26,12 @@ public partial class MainForm : Form
     private Button _btnLaunchAll = null!;
     private Button _btnStopAll = null!;
     private Button _btnAddAccount = null!;
+    private Button _btnLayout = null!;
+    private Button _btnSettings = null!;
+    private TextBox _txtHandlePath = null!;
+    private Button _btnBrowseHandle = null!;
+    private LinkLabel _lnkHandleDownload = null!;
+    private Label _lblHandleStatus = null!;
     private SplitContainer _splitContainer = null!;
     private StatusStrip _statusStrip = null!;
     private ToolStripStatusLabel _statusLabel = null!;
@@ -116,11 +123,11 @@ public partial class MainForm : Form
             new DataGridViewCheckBoxColumn { Name = "colEnabled", HeaderText = "✓", Width = 30, FillWeight = 5 },
             new DataGridViewTextBoxColumn { Name = "colName", HeaderText = Strings.ColName, FillWeight = 20 },
             new DataGridViewTextBoxColumn { Name = "colRole", HeaderText = Strings.ColRole, Width = 80, FillWeight = 12 },
+            new DataGridViewTextBoxColumn { Name = "colServer", HeaderText = SServerHeader(), FillWeight = 20 },
             new DataGridViewTextBoxColumn { Name = "colMod", HeaderText = Strings.ColMod, Width = 80, FillWeight = 12 },
             new DataGridViewTextBoxColumn { Name = "colStatus", HeaderText = Strings.ColStatus, Width = 80, FillWeight = 12 },
-            new DataGridViewButtonColumn { Name = "colEdit", HeaderText = "", Text = Strings.BtnEdit, UseColumnTextForButtonValue = true, Width = 60, FillWeight = 8 },
-            new DataGridViewButtonColumn { Name = "colLaunch", HeaderText = "", Text = Strings.BtnLaunch, UseColumnTextForButtonValue = true, Width = 60, FillWeight = 8 },
-            new DataGridViewButtonColumn { Name = "colReconnect", HeaderText = "", Text = Strings.BtnReconnect, UseColumnTextForButtonValue = true, Width = 80, FillWeight = 10 }
+            new DataGridViewButtonColumn { Name = "colEdit", HeaderText = "", Text = Strings.BtnEdit, UseColumnTextForButtonValue = true, Width = 80, FillWeight = 10 },
+            new DataGridViewButtonColumn { Name = "colLaunch", HeaderText = "", Text = Strings.BtnLaunch, UseColumnTextForButtonValue = true, Width = 90, FillWeight = 12 }
         );
 
         _grid.CellClick += Grid_CellClick;
@@ -129,25 +136,97 @@ public partial class MainForm : Form
 
     private void SetupButtons()
     {
-        var panel = new FlowLayoutPanel
+        var container = new TableLayoutPanel
         {
             Dock = DockStyle.Top,
-            Height = 40,
-            FlowDirection = FlowDirection.LeftToRight,
-            Padding = new Padding(4)
+            AutoSize = true,
+            ColumnCount = 1,
+            Padding = new Padding(6, 6, 6, 2)
         };
 
-        _btnLaunchAll = new Button { Text = Strings.BtnLaunchAll, Width = 100 };
+        var panel = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Dock = DockStyle.Top,
+            WrapContents = true,
+            FlowDirection = FlowDirection.LeftToRight,
+            Padding = new Padding(0),
+            Margin = new Padding(0, 0, 0, 6)
+        };
+
+        _btnLaunchAll = CreateTopButton(Strings.BtnLaunchAll);
         _btnLaunchAll.Click += async (_, _) => await LaunchAllAsync();
 
-        _btnStopAll = new Button { Text = Strings.BtnStopAll, Width = 100 };
+        _btnStopAll = CreateTopButton(Strings.BtnStopAll);
         _btnStopAll.Click += (_, _) => StopAll();
 
-        _btnAddAccount = new Button { Text = Strings.BtnAddAccount, Width = 100 };
+        _btnAddAccount = CreateTopButton(Strings.BtnAddAccount);
         _btnAddAccount.Click += (_, _) => AddAccount();
 
-        panel.Controls.AddRange([_btnLaunchAll, _btnStopAll, _btnAddAccount]);
-        _splitContainer.Panel1.Controls.Add(panel);
+        _btnLayout = CreateTopButton($"{Strings.MenuLayout}");
+        _btnLayout.Click += (_, _) => ShowMonitorLayout();
+
+        _btnSettings = CreateTopButton($"{Strings.MenuGlobalSettings}");
+        _btnSettings.Click += (_, _) => ShowGlobalSettings();
+
+        panel.Controls.AddRange([_btnLaunchAll, _btnStopAll, _btnAddAccount, _btnLayout, _btnSettings]);
+
+        var quickConfig = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            ColumnCount = 5,
+            Margin = new Padding(0),
+            Padding = new Padding(0)
+        };
+        quickConfig.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        quickConfig.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        quickConfig.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        quickConfig.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        quickConfig.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+
+        quickConfig.Controls.Add(new Label
+        {
+            Text = "handle.exe 路径 / Path",
+            Anchor = AnchorStyles.Left,
+            AutoSize = true,
+            Margin = new Padding(0, 7, 8, 0)
+        }, 0, 0);
+
+        _txtHandlePath = new TextBox { Dock = DockStyle.Fill, Margin = new Padding(0, 3, 6, 3) };
+        _txtHandlePath.Leave += (_, _) => ApplyQuickHandlePath();
+        quickConfig.Controls.Add(_txtHandlePath, 1, 0);
+
+        _btnBrowseHandle = new Button { Text = "...", AutoSize = true, Margin = new Padding(0, 2, 6, 2) };
+        _btnBrowseHandle.Click += (_, _) => BrowseHandleExe();
+        quickConfig.Controls.Add(_btnBrowseHandle, 2, 0);
+
+        _lnkHandleDownload = new LinkLabel { Text = "下载 handle.exe", AutoSize = true, Margin = new Padding(0, 8, 10, 0) };
+        _lnkHandleDownload.LinkClicked += (_, _) => OpenHandleDownload();
+        quickConfig.Controls.Add(_lnkHandleDownload, 3, 0);
+
+        _lblHandleStatus = new Label { AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 7, 0, 0) };
+        quickConfig.Controls.Add(_lblHandleStatus, 4, 0);
+
+        container.Controls.Add(panel, 0, 0);
+        container.Controls.Add(quickConfig, 0, 1);
+
+        _splitContainer.Panel1.Controls.Add(container);
+        SyncQuickSettingsFromConfig();
+    }
+
+    private static Button CreateTopButton(string text)
+    {
+        return new Button
+        {
+            Text = text,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            MinimumSize = new Size(110, 32),
+            Margin = new Padding(0, 0, 8, 8),
+            Padding = new Padding(10, 4, 10, 4)
+        };
     }
 
     private void SetupLog()
@@ -203,6 +282,7 @@ public partial class MainForm : Form
                 acct.Enabled,
                 string.IsNullOrEmpty(acct.Name) ? acct.User : acct.Name,
                 acct.Role,
+                ResolveServerText(acct),
                 acct.Mod,
                 status);
         }
@@ -223,9 +303,6 @@ public partial class MainForm : Form
                 break;
             case "colLaunch":
                 _ = LaunchSingleAsync(acct);
-                break;
-            case "colReconnect":
-                _ = ReconnectAsync(acct);
                 break;
         }
     }
@@ -252,7 +329,7 @@ public partial class MainForm : Form
                 {
                     Log(string.Format(Strings.LogLaunching, acct.Id));
                     var (_, handleLog) = HandleCli.FindAndCloseAll(
-                        _config.Global.HandleExePath, _config.Global.MutexName);
+                        _config.Global.HandleExePath, HandleCli.DefaultMutexName);
                     foreach (var line in handleLog) Log(line);
                 }
 
@@ -278,12 +355,19 @@ public partial class MainForm : Form
     {
         if (!acct.Enabled) return;
 
+        var state = _guard.GetState(acct.Id);
+        if (state?.IsAlive == true)
+        {
+            Log($"[Info] Account {acct.Id} is already running / 账号 {acct.Id} 已在运行。");
+            return;
+        }
+
         // 不是第一个实例时清理互斥量
         if (_guard.GetAllStates().Any(s => s.IsAlive))
         {
             if (!CheckHandleExe()) return;
             var (_, handleLog) = HandleCli.FindAndCloseAll(
-                _config.Global.HandleExePath, _config.Global.MutexName);
+                _config.Global.HandleExePath, HandleCli.DefaultMutexName);
             foreach (var line in handleLog) Log(line);
         }
 
@@ -293,6 +377,9 @@ public partial class MainForm : Form
 
     private async Task LaunchSingleCoreAsync(AccountConfig acct)
     {
+        EnsureAccountLayout(acct);
+        acct.Layout.Borderless = false;
+
         Log(string.Format(Strings.LogLaunching, acct.Id));
 
         var presetPath = PresetManager.GetPresetPath(acct.Role);
@@ -314,18 +401,15 @@ public partial class MainForm : Form
 
         if (arranged)
         {
+            await Task.Delay(1500);
+            await Task.Run(() => WindowOps.ArrangeWindow(result.ProcessId, acct.Layout, 3_000));
+        }
+
+        if (arranged)
+        {
             Log(string.Format(Strings.LogArranged, acct.Id,
                 acct.Layout.X, acct.Layout.Y, acct.Layout.W, acct.Layout.H));
         }
-    }
-
-    private async Task ReconnectAsync(AccountConfig acct)
-    {
-        var state = _guard.GetState(acct.Id);
-        if (state?.IsAlive == true) return; // 还活着就不重连
-
-        _guard.Unregister(acct.Id);
-        await LaunchSingleAsync(acct);
     }
 
     private void StopAll()
@@ -347,6 +431,8 @@ public partial class MainForm : Form
 
     private bool CheckHandleExe()
     {
+        ApplyQuickHandlePath();
+
         if (HandleCli.Exists(_config.Global.HandleExePath))
             return true;
 
@@ -376,6 +462,8 @@ public partial class MainForm : Form
         {
             _config.Global = form.Result;
             SaveConfig();
+            SyncQuickSettingsFromConfig();
+            RefreshGrid();
         }
     }
 
@@ -395,9 +483,15 @@ public partial class MainForm : Form
         int nextId = _config.Accounts.Count > 0
             ? _config.Accounts.Max(a => a.Id) + 1
             : 1;
-        var newAccount = new AccountConfig { Id = nextId, Enabled = true, Name = $"Account {nextId}" };
+        var newAccount = new AccountConfig
+        {
+            Id = nextId,
+            Enabled = true,
+            Name = $"Account {nextId}",
+            Layout = CreateDefaultLayout(nextId)
+        };
 
-        using var form = new AccountEditorForm(newAccount);
+        using var form = new AccountEditorForm(newAccount, _config.Global);
         if (form.ShowDialog(this) == DialogResult.OK)
         {
             _config.Accounts.Add(form.Result);
@@ -408,7 +502,7 @@ public partial class MainForm : Form
 
     private void EditAccount(AccountConfig acct)
     {
-        using var form = new AccountEditorForm(acct);
+        using var form = new AccountEditorForm(acct, _config.Global);
         if (form.ShowDialog(this) == DialogResult.OK)
         {
             var idx = _config.Accounts.FindIndex(a => a.Id == acct.Id);
@@ -487,15 +581,21 @@ public partial class MainForm : Form
         _btnLaunchAll.Text = Strings.BtnLaunchAll;
         _btnStopAll.Text = Strings.BtnStopAll;
         _btnAddAccount.Text = Strings.BtnAddAccount;
+        _btnLayout.Text = Strings.MenuLayout;
+        _btnSettings.Text = Strings.MenuGlobalSettings;
+        _lnkHandleDownload.Text = "下载 handle.exe / Download";
 
-        if (_grid.Columns.Count >= 9)
+        if (_grid.Columns.Count >= 8)
         {
             _grid.Columns["colId"].HeaderText = Strings.ColId;
             _grid.Columns["colName"].HeaderText = Strings.ColName;
             _grid.Columns["colRole"].HeaderText = Strings.ColRole;
+            _grid.Columns["colServer"].HeaderText = SServerHeader();
             _grid.Columns["colMod"].HeaderText = Strings.ColMod;
             _grid.Columns["colStatus"].HeaderText = Strings.ColStatus;
         }
+
+        UpdateHandleStatus();
 
         // 重建菜单以应用新语言
         Controls.Remove(_menuStrip);
@@ -509,6 +609,116 @@ public partial class MainForm : Form
     {
         ConfigStore.Save(_config);
     }
+
+    private void SyncQuickSettingsFromConfig()
+    {
+        if (_txtHandlePath != null)
+            _txtHandlePath.Text = _config.Global.HandleExePath;
+        UpdateHandleStatus();
+    }
+
+    private void ApplyQuickHandlePath()
+    {
+        if (_txtHandlePath == null)
+            return;
+
+        var value = _txtHandlePath.Text.Trim();
+        if (string.Equals(value, _config.Global.HandleExePath, StringComparison.Ordinal))
+        {
+            UpdateHandleStatus();
+            return;
+        }
+
+        _config.Global.HandleExePath = value;
+        SaveConfig();
+        UpdateHandleStatus();
+    }
+
+    private void BrowseHandleExe()
+    {
+        using var ofd = new OpenFileDialog
+        {
+            Filter = "handle.exe|handle.exe|Executable|*.exe|All Files|*.*",
+            Title = "Select handle.exe"
+        };
+
+        if (ofd.ShowDialog(this) != DialogResult.OK)
+            return;
+
+        _txtHandlePath.Text = ofd.FileName;
+        ApplyQuickHandlePath();
+    }
+
+    private static void OpenHandleDownload()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(HandleCli.DownloadUrl) { UseShellExecute = true });
+        }
+        catch
+        {
+        }
+    }
+
+    private void UpdateHandleStatus()
+    {
+        if (_lblHandleStatus == null)
+            return;
+
+        bool ok = HandleCli.Exists(_config.Global.HandleExePath);
+        _lblHandleStatus.Text = ok ? "已配置" : "未配置";
+        _lblHandleStatus.ForeColor = ok ? Color.SeaGreen : Color.Firebrick;
+    }
+
+    private string ResolveServerText(AccountConfig acct)
+    {
+        return string.IsNullOrWhiteSpace(acct.ServerAddress)
+            ? _config.Global.BattleNetAddress
+            : acct.ServerAddress;
+    }
+
+    private WindowLayout CreateDefaultLayout(int accountId)
+    {
+        var monitors = MonitorEnumerator.Enumerate();
+        var primary = monitors.FirstOrDefault(m => m.IsPrimary) ?? monitors.FirstOrDefault();
+        if (primary == null)
+            return new WindowLayout { W = 1280, H = 720, Borderless = false };
+
+        int offset = ((accountId - 1) % 4) * 40;
+        int width = Math.Min(1280, primary.WorkArea.Width);
+        int height = Math.Min(720, primary.WorkArea.Height);
+
+        return new WindowLayout
+        {
+            MonitorId = primary.DeviceName,
+            X = primary.WorkArea.X + Math.Min(offset, Math.Max(0, primary.WorkArea.Width - width)),
+            Y = primary.WorkArea.Y + Math.Min(offset, Math.Max(0, primary.WorkArea.Height - height)),
+            W = width,
+            H = height,
+            Borderless = false
+        };
+    }
+
+    private void EnsureAccountLayout(AccountConfig acct)
+    {
+        if (acct.Layout.W <= 0)
+            acct.Layout.W = 1280;
+        if (acct.Layout.H <= 0)
+            acct.Layout.H = 720;
+
+        if (!string.IsNullOrWhiteSpace(acct.Layout.MonitorId))
+            return;
+
+        var fallback = CreateDefaultLayout(acct.Id);
+        acct.Layout.MonitorId = fallback.MonitorId;
+        acct.Layout.X = fallback.X;
+        acct.Layout.Y = fallback.Y;
+        acct.Layout.W = fallback.W;
+        acct.Layout.H = fallback.H;
+        acct.Layout.Borderless = false;
+    }
+
+    private static string SServerHeader() => "服务器 / Server";
 
     private void Log(string message)
     {

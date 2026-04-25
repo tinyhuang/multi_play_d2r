@@ -3,21 +3,27 @@
 // ============================================================
 
 using D2RMultiPlay.Core.Config;
+using D2RMultiPlay.Core.Launch;
 
 namespace D2RMultiPlay.App;
 
 public sealed class AccountEditorForm : Form
 {
     private readonly AccountConfig _original;
+    private readonly GlobalSettings _global;
     public AccountConfig Result { get; private set; }
 
     private TextBox _txtName = null!;
     private TextBox _txtUser = null!;
     private TextBox _txtPassword = null!;
     private ComboBox _cboRole = null!;
+    private TextBox _txtServer = null!;
     private TextBox _txtMod = null!;
     private TextBox _txtOptions = null!;
     private TextBox _txtExePath = null!;
+    private NumericUpDown _nudWidth = null!;
+    private NumericUpDown _nudHeight = null!;
+    private TextBox _txtPreview = null!;
     private CheckBox _chkEnabled = null!;
     private Button _btnBrowse = null!;
     private Button _btnOk = null!;
@@ -25,18 +31,20 @@ public sealed class AccountEditorForm : Form
 
     private static Resources.Strings S => new();
 
-    public AccountEditorForm(AccountConfig account)
+    public AccountEditorForm(AccountConfig account, GlobalSettings global)
     {
         _original = account;
+        _global = global;
         Result = account;
         BuildUI();
         LoadData();
+        UpdatePreview();
     }
 
     private void BuildUI()
     {
         Text = S.AccountEditorTitle;
-        Size = new Size(480, 420);
+        Size = new Size(720, 620);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
@@ -91,6 +99,13 @@ public sealed class AccountEditorForm : Form
         table.SetColumnSpan(_cboRole, 2);
         row++;
 
+        // 服务器（账号级覆盖）
+        table.Controls.Add(new Label { Text = "服务器地址 / Server Override", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
+        _txtServer = new TextBox { Dock = DockStyle.Fill, PlaceholderText = "留空则使用全局服务器 / Empty = use global default" };
+        table.Controls.Add(_txtServer, 1, row);
+        table.SetColumnSpan(_txtServer, 2);
+        row++;
+
         // Mod
         table.Controls.Add(new Label { Text = S.LblMod, Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
         _txtMod = new TextBox { Dock = DockStyle.Fill };
@@ -114,6 +129,55 @@ public sealed class AccountEditorForm : Form
         table.Controls.Add(_btnBrowse, 2, row);
         row++;
 
+        // 窗口宽度
+        table.Controls.Add(new Label { Text = "窗口宽度 / Window Width", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
+        _nudWidth = new NumericUpDown
+        {
+            Dock = DockStyle.Left,
+            Minimum = 640,
+            Maximum = 7680,
+            Increment = 10,
+            Width = 140
+        };
+        table.Controls.Add(_nudWidth, 1, row);
+        table.SetColumnSpan(_nudWidth, 2);
+        row++;
+
+        // 窗口高度
+        table.Controls.Add(new Label { Text = "窗口高度 / Window Height", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
+        _nudHeight = new NumericUpDown
+        {
+            Dock = DockStyle.Left,
+            Minimum = 360,
+            Maximum = 4320,
+            Increment = 10,
+            Width = 140
+        };
+        table.Controls.Add(_nudHeight, 1, row);
+        table.SetColumnSpan(_nudHeight, 2);
+        row++;
+
+        // 启动预览
+        table.Controls.Add(new Label
+        {
+            Text = "启动参数预览 / Launch Preview",
+            Anchor = AnchorStyles.Left,
+            AutoSize = true
+        }, 0, row);
+        _txtPreview = new TextBox
+        {
+            Dock = DockStyle.Fill,
+            Multiline = true,
+            ReadOnly = true,
+            ScrollBars = ScrollBars.Vertical,
+            Height = 120,
+            Font = new Font("Consolas", 9F),
+            WordWrap = false
+        };
+        table.Controls.Add(_txtPreview, 1, row);
+        table.SetColumnSpan(_txtPreview, 2);
+        row++;
+
         // 按钮
         var btnPanel = new FlowLayoutPanel
         {
@@ -132,6 +196,17 @@ public sealed class AccountEditorForm : Form
         Controls.Add(btnPanel);
         AcceptButton = _btnOk;
         CancelButton = _btnCancel;
+
+        _txtName.TextChanged += (_, _) => UpdatePreview();
+        _txtUser.TextChanged += (_, _) => UpdatePreview();
+        _txtPassword.TextChanged += (_, _) => UpdatePreview();
+        _cboRole.SelectedIndexChanged += (_, _) => UpdatePreview();
+        _txtServer.TextChanged += (_, _) => UpdatePreview();
+        _txtMod.TextChanged += (_, _) => UpdatePreview();
+        _txtOptions.TextChanged += (_, _) => UpdatePreview();
+        _txtExePath.TextChanged += (_, _) => UpdatePreview();
+        _nudWidth.ValueChanged += (_, _) => UpdatePreview();
+        _nudHeight.ValueChanged += (_, _) => UpdatePreview();
     }
 
     private void LoadData()
@@ -140,9 +215,12 @@ public sealed class AccountEditorForm : Form
         _txtName.Text = _original.Name;
         _txtUser.Text = _original.User;
         _cboRole.SelectedIndex = _original.Role.Equals("slave", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+        _txtServer.Text = _original.ServerAddress;
         _txtMod.Text = _original.Mod;
         _txtOptions.Text = _original.Options;
         _txtExePath.Text = _original.ExePathOverride;
+        _nudWidth.Value = Math.Clamp(_original.Layout.W > 0 ? _original.Layout.W : 1280, 640, 7680);
+        _nudHeight.Value = Math.Clamp(_original.Layout.H > 0 ? _original.Layout.H : 720, 360, 4320);
 
         // 密码字段：如果已有加密密码则显示占位符
         if (!string.IsNullOrEmpty(_original.PassEnc))
@@ -166,14 +244,60 @@ public sealed class AccountEditorForm : Form
             User = _txtUser.Text.Trim(),
             PassEnc = passEnc,
             Role = _cboRole.SelectedIndex == 1 ? "slave" : "master",
+            ServerAddress = _txtServer.Text.Trim(),
             Mod = _txtMod.Text.Trim(),
             Options = _txtOptions.Text.Trim(),
             ExePathOverride = _txtExePath.Text.Trim(),
-            Layout = _original.Layout // 保留现有布局
+            Layout = new WindowLayout
+            {
+                MonitorId = _original.Layout.MonitorId,
+                X = _original.Layout.X,
+                Y = _original.Layout.Y,
+                W = (int)_nudWidth.Value,
+                H = (int)_nudHeight.Value,
+                Borderless = false
+            }
         };
 
         DialogResult = DialogResult.OK;
         Close();
+    }
+
+    private void UpdatePreview()
+    {
+        if (_txtPreview == null)
+            return;
+
+        var previewAccount = new AccountConfig
+        {
+            Id = _original.Id,
+            Enabled = _chkEnabled.Checked,
+            Name = _txtName.Text.Trim(),
+            User = _txtUser.Text.Trim(),
+            PassEnc = _original.PassEnc,
+            Role = _cboRole.SelectedIndex == 1 ? "slave" : "master",
+            ServerAddress = _txtServer.Text.Trim(),
+            Mod = _txtMod.Text.Trim(),
+            Options = _txtOptions.Text.Trim(),
+            ExePathOverride = _txtExePath.Text.Trim(),
+            Layout = new WindowLayout
+            {
+                MonitorId = _original.Layout.MonitorId,
+                X = _original.Layout.X,
+                Y = _original.Layout.Y,
+                W = (int)_nudWidth.Value,
+                H = (int)_nudHeight.Value,
+                Borderless = false
+            }
+        };
+
+        string? passwordOverride = string.IsNullOrWhiteSpace(_txtPassword.Text)
+            ? null
+            : _txtPassword.Text;
+
+        _txtPreview.Text = Launcher.BuildPreviewCommandLine(previewAccount, _global, passwordOverride)
+            + Environment.NewLine + Environment.NewLine
+            + "窗口位置请在主界面的显示器布局中设置。";
     }
 
     private static void BrowseExe(TextBox target)
