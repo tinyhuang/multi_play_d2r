@@ -293,7 +293,6 @@ public partial class MainForm : Form
 
         _splitContainer.Panel1.Controls.Add(container);
         SyncQuickSettingsFromConfig();
-        ApplyVisualStyles();
     }
 
     private static Button CreateTopButton(string text)
