@@ -46,11 +46,16 @@
 
   <!-- ===== MainForm ===== -->
   <data name="MenuFile" xml:space="preserve"><value>文件(&amp;F)</value></data>
+  <data name="MenuAccounts" xml:space="preserve"><value>账号(&amp;A)</value></data>
+  <data name="MenuTools" xml:space="preserve"><value>工具(&amp;T)</value></data>
+  <data name="MenuView" xml:space="preserve"><value>视图(&amp;V)</value></data>
   <data name="MenuGlobalSettings" xml:space="preserve"><value>全局设置(&amp;G)</value></data>
   <data name="MenuImport" xml:space="preserve"><value>导入配置(&amp;I)...</value></data>
   <data name="MenuExport" xml:space="preserve"><value>导出配置(&amp;E)...</value></data>
   <data name="MenuExit" xml:space="preserve"><value>退出(&amp;X)</value></data>
   <data name="MenuLanguage" xml:space="preserve"><value>语言(&amp;L)</value></data>
+  <data name="MenuToggleLog" xml:space="preserve"><value>显示/隐藏日志(&amp;L)</value></data>
+  <data name="MenuQuickStart" xml:space="preserve"><value>快速上手(&amp;Q)</value></data>
   <data name="MenuHelp" xml:space="preserve"><value>帮助(&amp;H)</value></data>
   <data name="MenuAbout" xml:space="preserve"><value>关于(&amp;A)</value></data>
   <data name="MenuLayout" xml:space="preserve"><value>游戏窗口布局(&amp;M)</value></data>

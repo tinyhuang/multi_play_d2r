@@ -81,26 +81,42 @@ public partial class MainForm : Form
     private void SetupMenu()
     {
         _menuStrip = new MenuStrip();
+        _menuStrip.GripStyle = ToolStripGripStyle.Visible;
 
         // 文件菜单
         var fileMenu = new ToolStripMenuItem(Strings.MenuFile);
-        fileMenu.DropDownItems.Add(Strings.MenuGlobalSettings, null, (_, _) => ShowGlobalSettings());
-        fileMenu.DropDownItems.Add(Strings.MenuLayout, null, (_, _) => ShowMonitorLayout());
+        fileMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuImport, null, (_, _) => ImportConfig()) { ShortcutKeys = Keys.Control | Keys.I });
+        fileMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuExport, null, (_, _) => ExportConfig()) { ShortcutKeys = Keys.Control | Keys.E });
         fileMenu.DropDownItems.Add(new ToolStripSeparator());
-        fileMenu.DropDownItems.Add(Strings.MenuImport, null, (_, _) => ImportConfig());
-        fileMenu.DropDownItems.Add(Strings.MenuExport, null, (_, _) => ExportConfig());
-        fileMenu.DropDownItems.Add(new ToolStripSeparator());
-        fileMenu.DropDownItems.Add(Strings.MenuExit, null, (_, _) => Close());
+        fileMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuExit, null, (_, _) => Close()) { ShortcutKeys = Keys.Alt | Keys.F4 });
         _menuStrip.Items.Add(fileMenu);
 
-        // 语言菜单
+        // 账号菜单
+        var accountMenu = new ToolStripMenuItem(Strings.MenuAccounts);
+        accountMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.BtnAddAccount, null, (_, _) => AddAccount()) { ShortcutKeys = Keys.Control | Keys.N });
+        accountMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.BtnLaunchAll, null, async (_, _) => await LaunchAllAsync()) { ShortcutKeys = Keys.F5 });
+        accountMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.BtnStopAll, null, (_, _) => StopAll()) { ShortcutKeys = Keys.Shift | Keys.F5 });
+        _menuStrip.Items.Add(accountMenu);
+
+        // 工具菜单
+        var toolsMenu = new ToolStripMenuItem(Strings.MenuTools);
+        toolsMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuGlobalSettings, null, (_, _) => ShowGlobalSettings()) { ShortcutKeys = Keys.Control | Keys.Oemcomma });
+        toolsMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuLayout, null, (_, _) => ShowMonitorLayout()) { ShortcutKeys = Keys.Control | Keys.L });
+        _menuStrip.Items.Add(toolsMenu);
+
+        // 视图菜单
+        var viewMenu = new ToolStripMenuItem(Strings.MenuView);
         var langMenu = new ToolStripMenuItem(Strings.MenuLanguage);
         langMenu.DropDownItems.Add("中文 (简体)", null, (_, _) => SwitchLanguage("zh-CN"));
         langMenu.DropDownItems.Add("English", null, (_, _) => SwitchLanguage("en-US"));
-        _menuStrip.Items.Add(langMenu);
+        viewMenu.DropDownItems.Add(langMenu);
+        viewMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuToggleLog, null, (_, _) => ToggleLogPanel()) { ShortcutKeys = Keys.Control | Keys.Shift | Keys.L });
+        _menuStrip.Items.Add(viewMenu);
 
         // 帮助菜单
         var helpMenu = new ToolStripMenuItem(Strings.MenuHelp);
+        helpMenu.DropDownItems.Add(Strings.MenuQuickStart, null, (_, _) => ShowQuickStart());
+        helpMenu.DropDownItems.Add(new ToolStripSeparator());
         helpMenu.DropDownItems.Add(Strings.MenuAbout, null, (_, _) => ShowAbout());
         _menuStrip.Items.Add(helpMenu);
 
@@ -122,8 +138,16 @@ public partial class MainForm : Form
             RowHeadersVisible = false,
             AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
             BackgroundColor = SystemColors.Window,
-            BorderStyle = BorderStyle.None
+            BorderStyle = BorderStyle.None,
+            EnableHeadersVisualStyles = false,
+            GridColor = Color.FromArgb(228, 233, 240)
         };
+        _grid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(243, 246, 251);
+        _grid.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(47, 53, 66);
+        _grid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+        _grid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(225, 239, 255);
+        _grid.DefaultCellStyle.SelectionForeColor = Color.Black;
+        _grid.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(249, 251, 254);
 
         var colId = new DataGridViewTextBoxColumn { Name = "colId", HeaderText = Strings.ColId, Width = 40, FillWeight = 7, ReadOnly = true };
         var colEnabled = new DataGridViewCheckBoxColumn { Name = "colEnabled", HeaderText = "启用", Width = 55, FillWeight = 8, ReadOnly = false };
@@ -253,6 +277,7 @@ public partial class MainForm : Form
 
         _splitContainer.Panel1.Controls.Add(container);
         SyncQuickSettingsFromConfig();
+        ApplyVisualStyles();
     }
 
     private static Button CreateTopButton(string text)
@@ -266,6 +291,28 @@ public partial class MainForm : Form
             Margin = new Padding(0, 0, 8, 8),
             Padding = new Padding(10, 4, 10, 4)
         };
+    }
+
+    private void ApplyVisualStyles()
+    {
+        _btnLaunchAll.FlatStyle = FlatStyle.Flat;
+        _btnLaunchAll.FlatAppearance.BorderSize = 0;
+        _btnLaunchAll.BackColor = Color.FromArgb(0, 120, 212);
+        _btnLaunchAll.ForeColor = Color.White;
+
+        _btnStopAll.FlatStyle = FlatStyle.Flat;
+        _btnStopAll.FlatAppearance.BorderSize = 0;
+        _btnStopAll.BackColor = Color.FromArgb(204, 71, 63);
+        _btnStopAll.ForeColor = Color.White;
+
+        foreach (var btn in new[] { _btnAddAccount, _btnLayout, _btnSettings, _btnLangZh, _btnLangEn, _btnBrowseD2r, _btnBrowseHandle })
+        {
+            btn.FlatStyle = FlatStyle.Flat;
+            btn.FlatAppearance.BorderColor = Color.FromArgb(206, 214, 224);
+            btn.BackColor = Color.FromArgb(248, 250, 253);
+        }
+
+        _splitContainer.BorderStyle = BorderStyle.FixedSingle;
     }
 
     private void SetupLog()
@@ -649,6 +696,31 @@ public partial class MainForm : Form
             "Uses Sysinternals handle.exe for mutex handling.\n\n" +
             "https://github.com/tinyhuang/multi_play_d2r",
             Strings.MenuAbout, MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    private void ShowQuickStart()
+    {
+        MessageBox.Show(
+            "快速上手\n\n" +
+            "1. 先配置 D2R.exe 与 handle.exe 路径。\n" +
+            "2. 添加账号并填写战网邮箱/密码。\n" +
+            "3. 如有需要，设置角色为 slave 以降低资源占用。\n" +
+            "4. 在游戏窗口布局中安排多显示器位置。\n" +
+            "5. 点击 全部启动。\n\n" +
+            "Quick Start\n\n" +
+            "1. Configure D2R.exe and handle.exe paths first.\n" +
+            "2. Add accounts with Battle.net email/password.\n" +
+            "3. Set role to slave for lower resource usage if needed.\n" +
+            "4. Arrange windows in Game Window Layout.\n" +
+            "5. Click Launch All.",
+            Strings.MenuQuickStart,
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information);
+    }
+
+    private void ToggleLogPanel()
+    {
+        _splitContainer.Panel2Collapsed = !_splitContainer.Panel2Collapsed;
     }
 
     // ======== 本地化 ========

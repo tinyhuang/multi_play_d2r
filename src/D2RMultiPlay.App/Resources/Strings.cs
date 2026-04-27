@@ -22,11 +22,16 @@ internal sealed class Strings
     public string Info => Get("Info");
 
     public string MenuFile => Get("MenuFile");
+    public string MenuAccounts => Get("MenuAccounts");
+    public string MenuTools => Get("MenuTools");
+    public string MenuView => Get("MenuView");
     public string MenuGlobalSettings => Get("MenuGlobalSettings");
     public string MenuImport => Get("MenuImport");
     public string MenuExport => Get("MenuExport");
     public string MenuExit => Get("MenuExit");
     public string MenuLanguage => Get("MenuLanguage");
+    public string MenuToggleLog => Get("MenuToggleLog");
+    public string MenuQuickStart => Get("MenuQuickStart");
     public string MenuHelp => Get("MenuHelp");
     public string MenuAbout => Get("MenuAbout");
     public string MenuLayout => Get("MenuLayout");

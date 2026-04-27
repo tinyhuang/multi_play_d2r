@@ -46,11 +46,16 @@
 
   <!-- ===== MainForm ===== -->
   <data name="MenuFile" xml:space="preserve"><value>&amp;File</value></data>
+  <data name="MenuAccounts" xml:space="preserve"><value>&amp;Accounts</value></data>
+  <data name="MenuTools" xml:space="preserve"><value>&amp;Tools</value></data>
+  <data name="MenuView" xml:space="preserve"><value>&amp;View</value></data>
   <data name="MenuGlobalSettings" xml:space="preserve"><value>&amp;Global Settings</value></data>
   <data name="MenuImport" xml:space="preserve"><value>&amp;Import Config...</value></data>
   <data name="MenuExport" xml:space="preserve"><value>&amp;Export Config...</value></data>
   <data name="MenuExit" xml:space="preserve"><value>E&amp;xit</value></data>
   <data name="MenuLanguage" xml:space="preserve"><value>&amp;Language</value></data>
+  <data name="MenuToggleLog" xml:space="preserve"><value>Show/Hide &amp;Log</value></data>
+  <data name="MenuQuickStart" xml:space="preserve"><value>&amp;Quick Start</value></data>
   <data name="MenuHelp" xml:space="preserve"><value>&amp;Help</value></data>
   <data name="MenuAbout" xml:space="preserve"><value>&amp;About</value></data>
   <data name="MenuLayout" xml:space="preserve"><value>Game Window &amp;Layout</value></data>
