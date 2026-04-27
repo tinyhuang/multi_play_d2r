@@ -53,6 +53,12 @@ public sealed class GlobalSettings
 
     /// <summary>UI 语言代码（zh-CN / en-US）</summary>
     public string UiCulture { get; set; } = "zh-CN";
+
+    /// <summary>UI 主题（dark / light）</summary>
+    public string UiTheme { get; set; } = "dark";
+
+    /// <summary>按钮图标风格（gamer / plain）</summary>
+    public string IconStyle { get; set; } = "gamer";
 }
 
 /// <summary>

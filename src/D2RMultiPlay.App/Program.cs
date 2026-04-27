@@ -16,19 +16,20 @@ internal static class Program
     [STAThread]
     static void Main()
     {
+        // 加载配置以获取语言偏好
+        var config = ConfigStore.Load();
+        ApplyCulture(config.Global.UiCulture);
+        var strings = new Resources.Strings();
+
         // 单实例检查
         using var mutex = new Mutex(true, AppMutexName, out bool createdNew);
         if (!createdNew)
         {
             MessageBox.Show(
-                "D2R 多开管理器已在运行中。\nD2R Multi-Play Manager is already running.",
-                "D2RMultiPlay", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                strings.AppAlreadyRunning,
+                strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
-
-        // 加载配置以获取语言偏好
-        var config = ConfigStore.Load();
-        ApplyCulture(config.Global.UiCulture);
 
         ApplicationConfiguration.Initialize();
         Application.Run(new MainForm(config));

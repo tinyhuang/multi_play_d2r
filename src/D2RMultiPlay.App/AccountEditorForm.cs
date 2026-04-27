@@ -74,7 +74,7 @@ public sealed class AccountEditorForm : Form
         int row = 0;
 
         // 启用
-        _chkEnabled = new CheckBox { Text = "Enabled / 启用", AutoSize = true };
+        _chkEnabled = new CheckBox { Text = S.ChkEnabled, AutoSize = true };
         table.Controls.Add(_chkEnabled, 0, row);
         table.SetColumnSpan(_chkEnabled, 3);
         row++;
@@ -109,9 +109,9 @@ public sealed class AccountEditorForm : Form
         row++;
 
         // 服务器（账号级覆盖）
-        table.Controls.Add(new Label { Text = "服务器地址 / Server Override", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
+        table.Controls.Add(new Label { Text = S.LblServerOverride, Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
         _cboServer = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
-        _cboServer.Items.Add("(使用全局默认) / (Use Global Default)");
+        _cboServer.Items.Add(S.ServerUseGlobalDefault);
         _cboServer.Items.AddRange(BattleNetServers.All);
         table.Controls.Add(_cboServer, 1, row);
         table.SetColumnSpan(_cboServer, 2);
@@ -141,7 +141,7 @@ public sealed class AccountEditorForm : Form
         row++;
 
         // 窗口宽度
-        table.Controls.Add(new Label { Text = "窗口宽度 / Window Width", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
+        table.Controls.Add(new Label { Text = S.LblWindowWidth, Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
         _nudWidth = new NumericUpDown
         {
             Dock = DockStyle.Left,
@@ -155,7 +155,7 @@ public sealed class AccountEditorForm : Form
         row++;
 
         // 窗口高度
-        table.Controls.Add(new Label { Text = "窗口高度 / Window Height", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
+        table.Controls.Add(new Label { Text = S.LblWindowHeight, Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
         _nudHeight = new NumericUpDown
         {
             Dock = DockStyle.Left,
@@ -171,7 +171,7 @@ public sealed class AccountEditorForm : Form
         // 启动预览
         table.Controls.Add(new Label
         {
-            Text = "启动参数预览 / Launch Preview",
+            Text = S.LblLaunchPreview,
             Anchor = AnchorStyles.Left,
             AutoSize = true
         }, 0, row);
@@ -339,7 +339,7 @@ public sealed class AccountEditorForm : Form
 
         _txtPreview.Text = Launcher.BuildPreviewCommandLine(previewAccount, _global, passwordOverride)
             + Environment.NewLine + Environment.NewLine
-            + "窗口位置请在主界面的显示器布局中设置。";
+            + S.PreviewLayoutHint;
     }
 
     private string ResolveSelectedServer()
@@ -355,7 +355,7 @@ public sealed class AccountEditorForm : Form
         using var ofd = new OpenFileDialog
         {
             Filter = "Executable|*.exe|All Files|*.*",
-            Title = "Select D2R.exe"
+            Title = S.SelectD2rExeTitle
         };
         if (ofd.ShowDialog() == DialogResult.OK)
             target.Text = ofd.FileName;
