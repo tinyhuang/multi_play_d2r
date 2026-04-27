@@ -101,3 +101,20 @@ multi_play_d2r/
 - 互斥处理基于官方 Sysinternals 工具
 - 密码使用 DPAPI（CurrentUser）加密存储
 - 请在遵守游戏服务条款的前提下使用
+
+## Git 提交身份约束
+
+本仓库约定只允许使用以下身份提交：
+
+- Name: tinyhuang
+- Email: tinyhuang@163.com
+
+仓库内置了 .githooks/pre-commit 钩子用于拦截不符合身份的提交。
+
+首次克隆后建议执行：
+
+```bash
+git config core.hooksPath .githooks
+git config user.name tinyhuang
+git config user.email tinyhuang@163.com
+```
