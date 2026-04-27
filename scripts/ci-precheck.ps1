@@ -11,8 +11,14 @@ function Add-CheckError {
 }
 
 function Read-GitValue {
-    param([string]$Args)
-    return (& git -C $repoRoot $Args).Trim()
+    param([string[]]$GitArgs)
+
+    $value = & git -C $repoRoot @GitArgs
+    if ($LASTEXITCODE -ne 0 -or $null -eq $value) {
+        return ''
+    }
+
+    return ($value | Out-String).Trim()
 }
 
 # 1) WinForms project should not enable Native AOT / full trimming.
@@ -90,10 +96,10 @@ foreach ($action in $requiredActions.Keys) {
 }
 
 # 6) Enforce commit identity policy on checked out HEAD.
-$headAuthorName = Read-GitValue 'show -s --format=%an HEAD'
-$headAuthorEmail = Read-GitValue 'show -s --format=%ae HEAD'
-$headCommitterName = Read-GitValue 'show -s --format=%cn HEAD'
-$headCommitterEmail = Read-GitValue 'show -s --format=%ce HEAD'
+$headAuthorName = Read-GitValue @('show', '-s', '--format=%an', 'HEAD')
+$headAuthorEmail = Read-GitValue @('show', '-s', '--format=%ae', 'HEAD')
+$headCommitterName = Read-GitValue @('show', '-s', '--format=%cn', 'HEAD')
+$headCommitterEmail = Read-GitValue @('show', '-s', '--format=%ce', 'HEAD')
 
 if ($headAuthorName -ne $expectedName -or $headAuthorEmail -ne $expectedEmail) {
     Add-CheckError "HEAD author must be $expectedName <$expectedEmail>, found $headAuthorName <$headAuthorEmail>."
