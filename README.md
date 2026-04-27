@@ -39,6 +39,24 @@ multi_play_d2r/
 - `dotnet test`
 - `dotnet publish`（Native AOT, win-x64）
 
+## 版本与发布策略（2026-04 起）
+
+- 主分支 `main`：
+	- 使用语义化版本 Tag（`vX.Y.Z`）作为正式发布。
+	- 推送 Tag 会触发 `Release` 工作流，生成 GitHub Release 与 zip 安装包。
+
+- 非主分支（`feature/**`）：
+	- CI 自动生成预发布版本号：`X.Y.Z-<branch>.<run_number>`。
+	- 构建产物名携带版本号，便于回溯。
+
+- UI 显示：
+	- 主界面状态栏显示 `Build: <InformationalVersion>`。
+	- About 对话框显示 `Version` 与 `Build`，用于用户报障与回滚定位。
+
+- 统一约定：
+	- 无论哪个分支，发布产物都带版本标记。
+	- 正式对外发布只建议在 `main` 上通过 Tag 完成。
+
 ## 合规与安全
 
 - 不注入游戏进程，不修改游戏内存。

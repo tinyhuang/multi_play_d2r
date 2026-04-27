@@ -14,6 +14,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v5
@@ -24,20 +26,69 @@ jobs:
         shell: pwsh
         run: ./scripts/ci-precheck.ps1
 
+      - name: Compute Version
+        id: ver
+        shell: pwsh
+        run: |
+          $baseVersion = "1.0.0"
+          $ref = "${{ github.ref }}"
+          $branch = "${{ github.ref_name }}"
+          $runNo = "${{ github.run_number }}"
+          $sha = "${{ github.sha }}".Substring(0, 7)
+
+          if ($ref.StartsWith("refs/tags/v")) {
+            $version = $ref.Replace("refs/tags/v", "")
+            $channel = "release"
+          }
+          elseif ($branch -eq "main") {
+            $version = "$baseVersion-main.$runNo"
+            $channel = "main"
+          }
+          else {
+            $safeBranch = $branch.ToLowerInvariant() -replace "[^0-9a-zA-Z-]", "-"
+            $safeBranch = $safeBranch.Trim('-')
+            if ([string]::IsNullOrWhiteSpace($safeBranch)) { $safeBranch = "branch" }
+            $version = "$baseVersion-$safeBranch.$runNo"
+            $channel = "preview"
+          }
+
+          $parts = $baseVersion.Split('.')
+          $fileVersion = "$($parts[0]).$($parts[1]).$($parts[2]).$runNo"
+          $infoVersion = "$version+branch.$branch.sha.$sha"
+          $artifactName = "D2RMultiPlay-win-x64-$version"
+
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "file_version=$fileVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "info_version=$infoVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "artifact_name=$artifactName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "channel=$channel" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
       - name: Restore
         run: dotnet restore D2RMultiPlay.sln
 
       - name: Build
-        run: dotnet build D2RMultiPlay.sln -c Release --no-restore
+        run: >
+          dotnet build D2RMultiPlay.sln -c Release --no-restore
+          -p:Version=${{ steps.ver.outputs.version }}
+          -p:FileVersion=${{ steps.ver.outputs.file_version }}
+          -p:InformationalVersion=${{ steps.ver.outputs.info_version }}
 
       - name: Test
-        run: dotnet test D2RMultiPlay.sln -c Release --no-build --verbosity normal
+        run: >
+          dotnet test D2RMultiPlay.sln -c Release --no-build --verbosity normal
+          -p:Version=${{ steps.ver.outputs.version }}
+          -p:FileVersion=${{ steps.ver.outputs.file_version }}
+          -p:InformationalVersion=${{ steps.ver.outputs.info_version }}
 
       - name: Publish (Single File)
-        run: dotnet publish src/D2RMultiPlay.App/D2RMultiPlay.App.csproj -c Release -r win-x64 --self-contained
+        run: >
+          dotnet publish src/D2RMultiPlay.App/D2RMultiPlay.App.csproj -c Release -r win-x64 --self-contained
+          -p:Version=${{ steps.ver.outputs.version }}
+          -p:FileVersion=${{ steps.ver.outputs.file_version }}
+          -p:InformationalVersion=${{ steps.ver.outputs.info_version }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v5
         with:
-          name: D2RMultiPlay-win-x64
+          name: ${{ steps.ver.outputs.artifact_name }}
           path: src/D2RMultiPlay.App/bin/Release/net8.0-windows/win-x64/publish/

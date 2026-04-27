@@ -40,6 +40,8 @@ public partial class MainForm : Form
     private SplitContainer _splitContainer = null!;
     private StatusStrip _statusStrip = null!;
     private ToolStripStatusLabel _statusLabel = null!;
+    private ToolStripStatusLabel _versionLabel = null!;
+    private readonly BuildInfo _buildInfo = BuildInfo.ReadCurrent();
 
     public MainForm(AppConfig config)
     {
@@ -284,7 +286,14 @@ public partial class MainForm : Form
     {
         _statusStrip = new StatusStrip();
         _statusLabel = new ToolStripStatusLabel("Ready");
+        _versionLabel = new ToolStripStatusLabel($"Build: {_buildInfo.InformationalVersion}")
+        {
+            Spring = true,
+            TextAlign = ContentAlignment.MiddleRight
+        };
+
         _statusStrip.Items.Add(_statusLabel);
+        _statusStrip.Items.Add(_versionLabel);
         Controls.Add(_statusStrip);
     }
 
@@ -635,10 +644,10 @@ public partial class MainForm : Form
     private void ShowAbout()
     {
         MessageBox.Show(
-            "D2R Multi-Play Manager v2.0\n\n" +
+            $"D2R Multi-Play Manager\nVersion: {_buildInfo.Version}\nBuild: {_buildInfo.InformationalVersion}\n\n" +
             "A compliant multi-instance launcher for Diablo II: Resurrected.\n" +
             "Uses Sysinternals handle.exe for mutex handling.\n\n" +
-            "https://github.com/your-repo/multi_play_d2r",
+            "https://github.com/tinyhuang/multi_play_d2r",
             Strings.MenuAbout, MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
