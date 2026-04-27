@@ -1,0 +1,113 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. 1.0.0)"
+        required: true
+        type: string
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Resolve Version
+        id: ver
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $version = "${{ inputs.version }}"
+          } else {
+            $version = "${{ github.ref_name }}".TrimStart('v')
+          }
+
+          if (-not ($version -match '^\d+\.\d+\.\d+([-.].*)?$')) {
+            throw "Invalid version format: $version"
+          }
+
+          $parts = $version.Split('-')[0].Split('.')
+          $fileVersion = "$($parts[0]).$($parts[1]).$($parts[2]).${{ github.run_number }}"
+          $shortSha = "${{ github.sha }}".Substring(0, 7)
+          $infoVersion = "$version+branch.main.sha.$shortSha"
+          $tagName = "v$version"
+          $artifactName = "D2RMultiPlay-win-x64-$version"
+
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "file_version=$fileVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "info_version=$infoVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "tag_name=$tagName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "artifact_name=$artifactName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Create tag for manual run
+        if: github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ((git tag -l "${{ steps.ver.outputs.tag_name }}") -ne "") {
+            throw "Tag already exists: ${{ steps.ver.outputs.tag_name }}"
+          }
+          git tag -a "${{ steps.ver.outputs.tag_name }}" -m "Release ${{ steps.ver.outputs.tag_name }}"
+          git push origin "${{ steps.ver.outputs.tag_name }}"
+
+      - name: Restore
+        run: dotnet restore D2RMultiPlay.sln
+
+      - name: Build
+        run: >
+          dotnet build D2RMultiPlay.sln -c Release --no-restore
+          -p:Version=${{ steps.ver.outputs.version }}
+          -p:FileVersion=${{ steps.ver.outputs.file_version }}
+          -p:InformationalVersion=${{ steps.ver.outputs.info_version }}
+
+      - name: Test
+        run: >
+          dotnet test D2RMultiPlay.sln -c Release --no-build --verbosity normal
+          -p:Version=${{ steps.ver.outputs.version }}
+          -p:FileVersion=${{ steps.ver.outputs.file_version }}
+          -p:InformationalVersion=${{ steps.ver.outputs.info_version }}
+
+      - name: Publish (Single File)
+        run: >
+          dotnet publish src/D2RMultiPlay.App/D2RMultiPlay.App.csproj -c Release -r win-x64 --self-contained
+          -p:Version=${{ steps.ver.outputs.version }}
+          -p:FileVersion=${{ steps.ver.outputs.file_version }}
+          -p:InformationalVersion=${{ steps.ver.outputs.info_version }}
+
+      - name: Archive publish folder
+        shell: pwsh
+        run: |
+          $zip = "${{ steps.ver.outputs.artifact_name }}.zip"
+          Compress-Archive -Path src/D2RMultiPlay.App/bin/Release/net8.0-windows/win-x64/publish/* -DestinationPath $zip
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: ${{ steps.ver.outputs.artifact_name }}
+          path: ${{ steps.ver.outputs.artifact_name }}.zip
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag_name }}
+          generate_release_notes: true
+          prerelease: false
+          files: ${{ steps.ver.outputs.artifact_name }}.zip

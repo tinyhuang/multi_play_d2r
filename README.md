@@ -1,151 +1,64 @@
 # multi_play_d2r
 
-> **Diablo II: Resurrected 多开启动器** — 在同一台 Windows 机器上同时启动多个 D2R 游戏实例，并自动完成窗口布局管理。
+Diablo II: Resurrected 多开配置与进程管理器（重构版，.NET 8 / WinForms）。
 
----
+本分支已从旧版 BAT 脚本迁移为 Windows 桌面应用架构，核心目标：
 
-## ✨ 功能特性
+- 合规多开（调用 Sysinternals handle.exe 处理互斥量）
+- 每账号独立配置环境（隔离 USERPROFILE / Settings.json）
+- 多显示器可视化布局与窗口控制
+- 配置持久化、导入导出与进程守卫
 
-- **最多支持 8 个账号同时启动**，每个账号可独立启用/禁用
-- **独立的画质和快捷键配置**：脚本在启动时会通过临时接管 `%USERPROFILE%` 的方式，为每个游戏实例分配独立的配置保存目录。实现不同账号拥有不同画质、音量、刷新率和快捷键设定，互不干扰。（首次启动时会自动从系统继承一份你的老配置）
-- **双显示器智能布局**：
-  - 使用 `yte` Mod 的实例 → 自动排列到主显示器（左上角起）
-  - 其他 Mod 的实例 → 自动排列到副显示器（左下角起）
-- **配置与密码分离**：账号密码单独存放在 `config/accounts_secrets.bat`（已加入 `.gitignore`，不会上传到 GitHub）
-- **每个账号可独立配置**：Mod 名称、启动参数（如 `-txt -ns -lq`）、游戏可执行文件路径（`ACCOUNT_x_DIABLO`，留空则使用全局 `diablo`）
-- **自动清理残留句柄**：使用 `handle.exe` 查找并关闭残留的游戏进程句柄，避免冲突
-- **窗口自动定位**：使用 `NewTitle.exe` 将每个游戏窗口精确移动到计算好的位置
-- **调试模式**：通过 `DEBUG_MODE=1` 开启命令回显，方便排查问题
-
----
-
-## 📁 项目结构
+## 当前目录结构
 
 ```
 multi_play_d2r/
-├── multi_play_d2r.bat              # 主启动脚本
-├── config/
-│   ├── base_settings.bat           # 本地路径与布局配置（需自行创建，见 .example）
-│   ├── base_settings.bat.example   # 配置模板（可提交到 GitHub）
-│   ├── accounts_secrets.bat        # 账号密码（已被 .gitignore 忽略，切勿上传！）
-│   └── accounts_secrets.bat.example # 账号配置模板（可提交到 GitHub）
-└── .gitignore
+├── D2RMultiPlay.sln
+├── Directory.Build.props
+├── src/
+│   ├── D2RMultiPlay.Core/
+│   └── D2RMultiPlay.App/
+├── tests/
+│   └── D2RMultiPlay.Core.Tests/
+└── .github/workflows/build.yml
 ```
 
----
+## 关键说明
 
-## 🔧 依赖工具
+- 目标运行环境是 Windows（建议 Windows 10/11）。
+- UI 应用在 manifest 中声明 `requireAdministrator`，用于 handle.exe 合规清理互斥量句柄。
+- 不再依赖旧版 `multi_play_d2r.bat`、`config/*.bat.example`、`NewTitle.exe`。
+- 账号敏感信息采用 DPAPI（CurrentUser）存储。
 
-| 工具 | 用途 | 下载地址 |
-|------|------|----------|
-| `D2R.exe` | Diablo II: Resurrected 游戏本体 | 通过 Battle.net 安装 |
-| `handle.exe` | 查找/关闭残留游戏句柄 | [Sysinternals Handle](https://learn.microsoft.com/zh-cn/sysinternals/downloads/handle) |
-| `NewTitle.exe` | 按窗口标题移动/调整窗口大小 | 社区工具 |
+## 构建与发布
 
-> 请将 `handle.exe` 和 `NewTitle.exe` 放置到 `base_settings.bat` 中 `workdir` 所指定的目录下。
+本仓库已配置 GitHub Actions（windows-latest）进行：
 
----
+- `dotnet restore`
+- `dotnet build`
+- `dotnet test`
+- `dotnet publish`（Native AOT, win-x64）
 
-## ⚙️ 配置说明
+## 版本与发布策略（2026-04 起）
 
-### 1. 配置 `config/base_settings.bat`
+- 主分支 `main`：
+	- 使用语义化版本 Tag（`vX.Y.Z`）作为正式发布。
+	- 推送 Tag 会触发 `Release` 工作流，生成 GitHub Release 与 zip 安装包。
 
-复制 `config/base_settings.bat.example` 并重命名为 `config/base_settings.bat`，根据实际环境修改：
+- 非主分支（`feature/**`）：
+	- CI 自动生成预发布版本号：`X.Y.Z-<branch>.<run_number>`。
+	- 构建产物名携带版本号，便于回溯。
 
-```bat
-:: 启动间隔（秒）
-set secs=8
+- UI 显示：
+	- 主界面状态栏显示 `Build: <InformationalVersion>`。
+	- About 对话框显示 `Version` 与 `Build`，用于用户报障与回滚定位。
 
-:: 服务器地址
-set addres="kr.actual.battle.net"
+- 统一约定：
+	- 无论哪个分支，发布产物都带版本标记。
+	- 正式对外发布只建议在 `main` 上通过 Tag 完成。
 
-:: 游戏主程序路径
-set diablo="D:\BlizzardGame\d2r\D2R.exe"
+## 合规与安全
 
-:: 工具所在目录（存放 handle.exe 和 NewTitle.exe）
-set workdir=D:\BlizzardGame\d2r\bootdiablo
-
-:: 屏幕分辨率（4K 示例）
-set SCREEN_W=3840
-set SCREEN_H=2160
-
-:: 任务栏高度（像素）
-set TASKBAR_H=48
-
-:: 网格列数
-set GRID_COLS=3
-set GRID_ROWS=3
-```
-
-### 2. 配置 `config/accounts_secrets.bat`
-
-复制 `config/accounts_secrets.bat.example` 并重命名为 `config/accounts_secrets.bat`，填入真实账号信息：
-
-```bat
-:: 账号 1
-set ACCOUNT_1_ENABLE=1                  :: 1=启用, 0=禁用
-set ACCOUNT_1_USER=your@email.com       :: 战网账号
-set ACCOUNT_1_PASS=your_password        :: 游戏密码
-set ACCOUNT_1_MOD=tiny                  :: Mod 名称（留空则不加载 Mod）
-set ACCOUNT_1_OPTIONS=-txt              :: 可选启动参数
-set ACCOUNT_1_DIABLO=                   :: 独立游戏路径（留空则使用全局 diablo）
-
-:: ... 最多配置到 Account 8
-```
-
-> ⚠️ **警告**：`accounts_secrets.bat` 已被 `.gitignore` 忽略，**绝不能上传到 GitHub！**
-
----
-
-## 🚀 使用方法
-
-1. 按上述说明完成两个配置文件的设置
-2. 将工具文件（`handle.exe`、`NewTitle.exe`）放到 `workdir` 指定目录
-3. **以管理员身份运行** `multi_play_d2r.bat`
-4. 脚本会依次：
-   - 检查并关闭残留句柄
-   - 启动 D2R 实例
-   - 等待 `secs` 秒后调整窗口位置
-   - 重复以上步骤，直到所有启用的账号都启动完毕
-
----
-
-## 🖥️ 窗口布局逻辑
-
-所有窗口统一尺寸为 **1280 × 720**，布局规则如下：
-
-| Mod 类型 | 目标显示器 | 排列方向 |
-|----------|-----------|----------|
-| `yte` | 主显示器（Monitor 1） | 从左上角开始，按网格排列 |
-| 其他 Mod | 副显示器（Monitor 2） | 从左下角开始，向上按网格排列 |
-
-网格列数由 `GRID_COLS` 控制，超出一行则自动换行。
-
----
-
-## 🔐 安全说明
-
-| 文件 | 是否提交 GitHub | 说明 |
-|------|---------------|------|
-| `multi_play_d2r.bat` | ✅ 可以 | 不含敏感信息 |
-| `config/base_settings.bat.example` | ✅ 可以 | 仅为模板 |
-| `config/accounts_secrets.bat.example` | ✅ 可以 | 仅为模板（含示例占位符） |
-| `config/base_settings.bat` | ❌ 不要 | 含本地路径（已加入 .gitignore） |
-| `config/accounts_secrets.bat` | ❌ 绝不要 | 含真实账号密码（已加入 .gitignore） |
-| `multi_play_d2r_origin.bat` | ❌ 绝不要 | 历史脚本，含真实账号信息（已加入 .gitignore） |
-
----
-
-## 📝 调试技巧
-
-在 `multi_play_d2r.bat` 顶部将 `DEBUG_MODE` 改为 `1`，可以开启命令回显：
-
-```bat
-set DEBUG_MODE=1
-```
-
----
-
-## 📜 许可
-
-本项目仅供个人学习交流，请遵守游戏服务条款。
+- 不注入游戏进程，不修改游戏内存。
+- 互斥量处理基于官方 Sysinternals 工具。
+- 项目仅用于个人学习与工程实践，请遵守游戏服务条款。

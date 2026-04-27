@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="0" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter</value></resheader>
+
+  <!-- ===== 通用 ===== -->
+  <data name="AppTitle" xml:space="preserve"><value>D2R 多开管理器</value></data>
+  <data name="OK" xml:space="preserve"><value>确定</value></data>
+  <data name="Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Close" xml:space="preserve"><value>关闭</value></data>
+  <data name="Error" xml:space="preserve"><value>错误</value></data>
+  <data name="Warning" xml:space="preserve"><value>警告</value></data>
+  <data name="Info" xml:space="preserve"><value>提示</value></data>
+  <data name="Yes" xml:space="preserve"><value>是</value></data>
+  <data name="No" xml:space="preserve"><value>否</value></data>
+
+  <!-- ===== MainForm ===== -->
+  <data name="MenuFile" xml:space="preserve"><value>文件(&amp;F)</value></data>
+  <data name="MenuGlobalSettings" xml:space="preserve"><value>全局设置(&amp;G)</value></data>
+  <data name="MenuImport" xml:space="preserve"><value>导入配置(&amp;I)...</value></data>
+  <data name="MenuExport" xml:space="preserve"><value>导出配置(&amp;E)...</value></data>
+  <data name="MenuExit" xml:space="preserve"><value>退出(&amp;X)</value></data>
+  <data name="MenuLanguage" xml:space="preserve"><value>语言(&amp;L)</value></data>
+  <data name="MenuHelp" xml:space="preserve"><value>帮助(&amp;H)</value></data>
+  <data name="MenuAbout" xml:space="preserve"><value>关于(&amp;A)</value></data>
+  <data name="MenuLayout" xml:space="preserve"><value>游戏窗口布局(&amp;M)</value></data>
+
+  <data name="BtnLaunchAll" xml:space="preserve"><value>全部启动</value></data>
+  <data name="BtnStopAll" xml:space="preserve"><value>全部停止</value></data>
+  <data name="BtnAddAccount" xml:space="preserve"><value>添加账号</value></data>
+  <data name="BtnEdit" xml:space="preserve"><value>编辑</value></data>
+  <data name="BtnDelete" xml:space="preserve"><value>删除</value></data>
+  <data name="BtnLaunch" xml:space="preserve"><value>启动</value></data>
+  <data name="BtnReconnect" xml:space="preserve"><value>快速重连</value></data>
+
+  <data name="ColId" xml:space="preserve"><value>序号</value></data>
+  <data name="ColEnabled" xml:space="preserve"><value>启用</value></data>
+  <data name="ColName" xml:space="preserve"><value>名称</value></data>
+  <data name="ColEmail" xml:space="preserve"><value>战网邮箱</value></data>
+  <data name="ColRole" xml:space="preserve"><value>角色</value></data>
+  <data name="ColMod" xml:space="preserve"><value>Mod</value></data>
+  <data name="ColStatus" xml:space="preserve"><value>状态</value></data>
+  <data name="ColActions" xml:space="preserve"><value>操作</value></data>
+
+  <data name="StatusAlive" xml:space="preserve"><value>运行中</value></data>
+  <data name="StatusDead" xml:space="preserve"><value>已停止</value></data>
+  <data name="StatusDisabled" xml:space="preserve"><value>已禁用</value></data>
+
+  <!-- ===== Handle.exe ===== -->
+  <data name="HandleNotFound" xml:space="preserve"><value>未找到 handle.exe，请从微软 Sysinternals 官方下载并在"全局设置"中配置路径。</value></data>
+  <data name="HandleNotFoundTitle" xml:space="preserve"><value>handle.exe 缺失</value></data>
+  <data name="HandleDownloadPrompt" xml:space="preserve"><value>是否打开 Sysinternals 官方下载页面？</value></data>
+
+  <!-- ===== AccountEditor ===== -->
+  <data name="AccountEditorTitle" xml:space="preserve"><value>编辑账号</value></data>
+  <data name="LblUser" xml:space="preserve"><value>战网邮箱：</value></data>
+  <data name="LblPassword" xml:space="preserve"><value>密码：</value></data>
+  <data name="LblName" xml:space="preserve"><value>显示名称：</value></data>
+  <data name="LblRole" xml:space="preserve"><value>角色类型：</value></data>
+  <data name="LblMod" xml:space="preserve"><value>Mod：</value></data>
+  <data name="LblOptions" xml:space="preserve"><value>附加参数：</value></data>
+  <data name="LblExePath" xml:space="preserve"><value>独立 D2R.exe 路径：</value></data>
+  <data name="RoleMaster" xml:space="preserve"><value>主玩（Master）</value></data>
+  <data name="RoleSlave" xml:space="preserve"><value>挂机（Slave）</value></data>
+
+  <!-- ===== GlobalSettings ===== -->
+  <data name="GlobalSettingsTitle" xml:space="preserve"><value>全局设置</value></data>
+  <data name="LblD2rExe" xml:space="preserve"><value>D2R.exe 路径：</value></data>
+  <data name="LblHandleExe" xml:space="preserve"><value>handle.exe 路径：</value></data>
+  <data name="LblServer" xml:space="preserve"><value>服务器地址：</value></data>
+  <data name="LblInterval" xml:space="preserve"><value>启动间隔（秒）：</value></data>
+  <data name="LblMutexName" xml:space="preserve"><value>互斥量名称：</value></data>
+
+  <!-- ===== MonitorLayout ===== -->
+  <data name="MonitorLayoutTitle" xml:space="preserve"><value>游戏窗口布局</value></data>
+  <data name="BtnAutoGrid" xml:space="preserve"><value>自动网格排列</value></data>
+  <data name="BtnRefreshMonitors" xml:space="preserve"><value>刷新显示器</value></data>
+
+  <!-- ===== Export ===== -->
+  <data name="ExportIncludePassword" xml:space="preserve"><value>包含密码（DPAPI 加密，不可跨机器使用）</value></data>
+  <data name="ExportPasswordWarning" xml:space="preserve"><value>警告：加密密码与当前 Windows 账户绑定，无法在其他电脑上使用。</value></data>
+
+  <!-- ===== Log ===== -->
+  <data name="LogLaunching" xml:space="preserve"><value>正在启动账号 {0}...</value></data>
+  <data name="LogLaunched" xml:space="preserve"><value>账号 {0} 已启动 (PID: {1})</value></data>
+  <data name="LogArranging" xml:space="preserve"><value>正在调整账号 {0} 的窗口位置...</value></data>
+  <data name="LogArranged" xml:space="preserve"><value>账号 {0} 窗口已就位：({1},{2}) {3}x{4}</value></data>
+  <data name="LogFailed" xml:space="preserve"><value>账号 {0} 启动失败：{1}</value></data>
+  <data name="LogDied" xml:space="preserve"><value>账号 {0} 进程意外退出</value></data>
+</root>
