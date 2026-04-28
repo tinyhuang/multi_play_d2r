@@ -3,12 +3,12 @@
 // 包装 ResourceManager 调用，统一从 .resx 读取当前语言资源
 // ============================================================
 
-namespace D2RMultiPlay.App.Resources;
+namespace D2RMultiPlay.Wpf.Resources;
 
 internal sealed class Strings
 {
     private static readonly System.Resources.ResourceManager _rm =
-        new("D2RMultiPlay.App.Resources.Strings", typeof(Strings).Assembly);
+        new("D2RMultiPlay.Wpf.Resources.Strings", typeof(Strings).Assembly);
 
     private static string Get(string key) => _rm.GetString(key) ?? key;
 

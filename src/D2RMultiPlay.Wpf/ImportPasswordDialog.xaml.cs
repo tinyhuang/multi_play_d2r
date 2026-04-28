@@ -2,6 +2,8 @@
 // ImportPasswordDialog.xaml.cs — 导入加密口令输入
 // ============================================================
 
+using System.Windows;
+
 namespace D2RMultiPlay.Wpf;
 
 /// <summary>

@@ -2,7 +2,8 @@
 // ExportPasswordDialog.xaml.cs — 导出加密口令设置
 // ============================================================
 
-using D2RMultiPlay.App.Resources;
+using System.Windows;
+using D2RMultiPlay.Wpf.Resources;
 
 namespace D2RMultiPlay.Wpf;
 

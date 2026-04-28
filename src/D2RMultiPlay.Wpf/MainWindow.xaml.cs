@@ -4,9 +4,14 @@
 // ============================================================
 
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Windows;
 using System.Windows.Documents;
-using D2RMultiPlay.App.Resources;
+using System.Windows.Media;
+using Microsoft.Win32;
 using D2RMultiPlay.Core.Config;
+using D2RMultiPlay.Wpf.Resources;
 
 namespace D2RMultiPlay.Wpf;
 
@@ -67,8 +72,8 @@ public partial class MainWindow : Window
 
     private void MenuExportEncrypted_Click(object sender, RoutedEventArgs e)
     {
-        using var dlg = new ExportPasswordDialog();
-        if (dlg.ShowDialog(this) != true) return;
+        var dlg = new ExportPasswordDialog { Owner = this };
+        if (dlg.ShowDialog() != true) return;
 
         var sfd = new SaveFileDialog
         {
@@ -76,7 +81,7 @@ public partial class MainWindow : Window
             FileName = "d2r_multiplay_config.d2rmp"
         };
 
-        if (sfd.ShowDialog(this) != true) return;
+        if (sfd.ShowDialog() != true) return;
 
         try
         {
@@ -97,10 +102,10 @@ public partial class MainWindow : Window
             Filter = "D2R MultiPlay Config|*.d2rmp|All Files|*.*"
         };
 
-        if (ofd.ShowDialog(this) != true) return;
+        if (ofd.ShowDialog() != true) return;
 
-        using var dlg = new ImportPasswordDialog();
-        if (dlg.ShowDialog(this) != true) return;
+        var dlg = new ImportPasswordDialog { Owner = this };
+        if (dlg.ShowDialog() != true) return;
 
         try
         {
@@ -139,7 +144,7 @@ public partial class MainWindow : Window
             FileName = "d2r_multiplay_config.json"
         };
 
-        if (sfd.ShowDialog(this) != true) return;
+        if (sfd.ShowDialog() != true) return;
 
         var includePass = MessageBox.Show(
             S.ExportIncludePassword + "\n\n" + S.ExportPasswordWarning,
@@ -159,7 +164,7 @@ public partial class MainWindow : Window
             Filter = "JSON Files|*.json|All Files|*.*"
         };
 
-        if (ofd.ShowDialog(this) != true) return;
+        if (ofd.ShowDialog() != true) return;
 
         try
         {
