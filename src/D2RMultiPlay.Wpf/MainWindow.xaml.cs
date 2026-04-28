@@ -320,12 +320,28 @@ public partial class MainWindow : Window
 
     private void BtnSettings_Click(object? sender, RoutedEventArgs? e)
     {
-        MessageBox.Show("Global settings editor is being migrated to WPF.", S.Info, MessageBoxButton.OK, MessageBoxImage.Information);
+        var dlg = new GlobalSettingsDialog(_config.Global) { Owner = this };
+        if (dlg.ShowDialog() != true)
+            return;
+
+        _config.Global = dlg.Result;
+        SaveConfig();
+        ApplyTheme();
+        ApplyLocalization();
+        RefreshGrid();
+        Log("Global settings updated.");
     }
 
     private void BtnLayout_Click(object? sender, RoutedEventArgs? e)
     {
-        MessageBox.Show("Monitor layout editor is being migrated to WPF.", S.Info, MessageBoxButton.OK, MessageBoxImage.Information);
+        var dlg = new MonitorLayoutDialog(_config) { Owner = this };
+        if (dlg.ShowDialog() != true)
+            return;
+
+        _config = dlg.Result;
+        SaveConfig();
+        RefreshGrid();
+        Log("Monitor layout updated.");
     }
 
     private void BtnLangZh_Click(object sender, RoutedEventArgs e)
