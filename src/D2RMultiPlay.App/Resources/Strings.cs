@@ -125,6 +125,22 @@ internal sealed class Strings
     public string ExportIncludePassword => Get("ExportIncludePassword");
     public string ExportPasswordWarning => Get("ExportPasswordWarning");
 
+    // ===== Encrypted Import/Export =====
+    public string MenuExportEncrypted => Get("MenuExportEncrypted");
+    public string MenuImportEncrypted => Get("MenuImportEncrypted");
+    public string ExportSetPassphraseTitle => Get("ExportSetPassphraseTitle");
+    public string ExportPassphraseLabel => Get("ExportPassphraseLabel");
+    public string ExportPassphraseConfirmLabel => Get("ExportPassphraseConfirmLabel");
+    public string ExportIncludePasswordOption => Get("ExportIncludePasswordOption");
+    public string ExportPassphraseWarning => Get("ExportPassphraseWarning");
+    public string ExportPassphraseTooShort => Get("ExportPassphraseTooShort");
+    public string ExportPassphraseMismatch => Get("ExportPassphraseMismatch");
+    public string ImportEnterPassphraseTitle => Get("ImportEnterPassphraseTitle");
+    public string ImportPassphraseLabel => Get("ImportPassphraseLabel");
+    public string ImportWrongPassphrase => Get("ImportWrongPassphrase");
+    public string ConfigExportedEncryptedLog => Get("ConfigExportedEncryptedLog");
+    public string ConfigImportedEncryptedLog => Get("ConfigImportedEncryptedLog");
+
     public string LogLaunching => Get("LogLaunching");
     public string LogLaunched => Get("LogLaunched");
     public string LogArranging => Get("LogArranging");

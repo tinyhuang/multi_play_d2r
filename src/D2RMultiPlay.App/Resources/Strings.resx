@@ -154,6 +154,22 @@
   <data name="ExportIncludePassword" xml:space="preserve"><value>Include passwords (DPAPI encrypted, NOT portable)</value></data>
   <data name="ExportPasswordWarning" xml:space="preserve"><value>WARNING: Encrypted passwords are bound to your Windows account and cannot be used on other machines.</value></data>
 
+  <!-- ===== Encrypted Import/Export ===== -->
+  <data name="MenuExportEncrypted" xml:space="preserve"><value>Export Encrypted (.d2rmp)...</value></data>
+  <data name="MenuImportEncrypted" xml:space="preserve"><value>Import Encrypted (.d2rmp)...</value></data>
+  <data name="ExportSetPassphraseTitle" xml:space="preserve"><value>Set Export Passphrase</value></data>
+  <data name="ExportPassphraseLabel" xml:space="preserve"><value>Passphrase (min 8 characters):</value></data>
+  <data name="ExportPassphraseConfirmLabel" xml:space="preserve"><value>Confirm passphrase:</value></data>
+  <data name="ExportIncludePasswordOption" xml:space="preserve"><value>Include account passwords (portable, encrypted with your passphrase)</value></data>
+  <data name="ExportPassphraseWarning" xml:space="preserve"><value>⚠ If you lose this passphrase, the exported file CANNOT be recovered.</value></data>
+  <data name="ExportPassphraseTooShort" xml:space="preserve"><value>Passphrase must be at least 8 characters.</value></data>
+  <data name="ExportPassphraseMismatch" xml:space="preserve"><value>Passphrases do not match. Please re-enter.</value></data>
+  <data name="ImportEnterPassphraseTitle" xml:space="preserve"><value>Enter Import Passphrase</value></data>
+  <data name="ImportPassphraseLabel" xml:space="preserve"><value>Enter passphrase for this file:</value></data>
+  <data name="ImportWrongPassphrase" xml:space="preserve"><value>Wrong passphrase or corrupted file. Please try again.</value></data>
+  <data name="ConfigExportedEncryptedLog" xml:space="preserve"><value>Configuration exported (encrypted .d2rmp).</value></data>
+  <data name="ConfigImportedEncryptedLog" xml:space="preserve"><value>Configuration imported from encrypted .d2rmp file.</value></data>
+
   <!-- ===== Log ===== -->
   <data name="LogLaunching" xml:space="preserve"><value>Launching Account {0}...</value></data>
   <data name="LogLaunched" xml:space="preserve"><value>Account {0} launched (PID: {1})</value></data>

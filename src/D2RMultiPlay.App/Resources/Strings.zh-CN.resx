@@ -153,7 +153,21 @@
   <!-- ===== Export ===== -->
   <data name="ExportIncludePassword" xml:space="preserve"><value>包含密码（DPAPI 加密，不可跨机器使用）</value></data>
   <data name="ExportPasswordWarning" xml:space="preserve"><value>警告：加密密码与当前 Windows 账户绑定，无法在其他电脑上使用。</value></data>
-
+  <!-- ===== Encrypted Import/Export ===== -->
+  <data name="MenuExportEncrypted" xml:space="preserve"><value>加密导出 (.d2rmp)...</value></data>
+  <data name="MenuImportEncrypted" xml:space="preserve"><value>加密导入 (.d2rmp)...</value></data>
+  <data name="ExportSetPassphraseTitle" xml:space="preserve"><value>设置导出口令</value></data>
+  <data name="ExportPassphraseLabel" xml:space="preserve"><value>口令（至少 8 位）：</value></data>
+  <data name="ExportPassphraseConfirmLabel" xml:space="preserve"><value>确认口令：</value></data>
+  <data name="ExportIncludePasswordOption" xml:space="preserve"><value>包含账号密码（使用口令加密，可跨机器导入）</value></data>
+  <data name="ExportPassphraseWarning" xml:space="preserve"><value>⚠ 如果遗忘此口令，导出文件将无法恢复！</value></data>
+  <data name="ExportPassphraseTooShort" xml:space="preserve"><value>口令长度不足 8 位。</value></data>
+  <data name="ExportPassphraseMismatch" xml:space="preserve"><value>两次口令不一致，请重新输入。</value></data>
+  <data name="ImportEnterPassphraseTitle" xml:space="preserve"><value>输入导入口令</value></data>
+  <data name="ImportPassphraseLabel" xml:space="preserve"><value>请输入该文件的口令：</value></data>
+  <data name="ImportWrongPassphrase" xml:space="preserve"><value>口令错误或文件已损坏，请重试。</value></data>
+  <data name="ConfigExportedEncryptedLog" xml:space="preserve"><value>配置已加密导出（.d2rmp）。</value></data>
+  <data name="ConfigImportedEncryptedLog" xml:space="preserve"><value>已从加密文件（.d2rmp）导入配置。</value></data>
   <!-- ===== Log ===== -->
   <data name="LogLaunching" xml:space="preserve"><value>正在启动账号 {0}...</value></data>
   <data name="LogLaunched" xml:space="preserve"><value>账号 {0} 已启动 (PID: {1})</value></data>

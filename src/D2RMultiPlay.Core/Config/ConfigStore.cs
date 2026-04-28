@@ -142,6 +142,31 @@ public static class ConfigStore
     }
 
     /// <summary>
+    /// 导出可移植配置：密码字段从 DPAPI 解密为明文，适合跨机器加密传输
+    /// </summary>
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    public static string ExportPortable(AppConfig config, bool includePasswords = false)
+    {
+        var json = JsonSerializer.Serialize(config, AppConfigJsonContext.Default.AppConfig);
+        var clone = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.AppConfig)!;
+
+        foreach (var acct in clone.Accounts)
+        {
+            if (!includePasswords)
+            {
+                acct.PassEnc = "";
+            }
+            else if (!string.IsNullOrEmpty(acct.PassEnc))
+            {
+                // DPAPI → 明文，便于目标机器用自己的 DPAPI 重新加密
+                acct.PassEnc = DecryptPassword(acct.PassEnc);
+            }
+        }
+
+        return JsonSerializer.Serialize(clone, AppConfigJsonContext.Default.AppConfig);
+    }
+
+    /// <summary>
     /// 从 JSON 字符串导入配置
     /// </summary>
     public static AppConfig Import(string json)

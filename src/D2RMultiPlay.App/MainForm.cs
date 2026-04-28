@@ -88,8 +88,11 @@ public partial class MainForm : Form
 
         // 文件菜单
         var fileMenu = new ToolStripMenuItem(Strings.MenuFile);
-        fileMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuImport, null, (_, _) => ImportConfig()) { ShortcutKeys = Keys.Control | Keys.I });
-        fileMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuExport, null, (_, _) => ExportConfig()) { ShortcutKeys = Keys.Control | Keys.E });
+        fileMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuExportEncrypted, null, (_, _) => ExportConfigEncrypted()) { ShortcutKeys = Keys.Control | Keys.E });
+        fileMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuImportEncrypted, null, (_, _) => ImportConfigEncrypted()) { ShortcutKeys = Keys.Control | Keys.I });
+        fileMenu.DropDownItems.Add(new ToolStripSeparator());
+        fileMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuImport, null, (_, _) => ImportConfig()));
+        fileMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuExport, null, (_, _) => ExportConfig()));
         fileMenu.DropDownItems.Add(new ToolStripSeparator());
         fileMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuExit, null, (_, _) => Close()) { ShortcutKeys = Keys.Alt | Keys.F4 });
         _menuStrip.Items.Add(fileMenu);
@@ -771,6 +774,76 @@ public partial class MainForm : Form
         var json = ConfigStore.Export(_config, includePass);
         File.WriteAllText(sfd.FileName, json);
         Log(Strings.ConfigExportedLog);
+    }
+
+    private void ExportConfigEncrypted()
+    {
+        using var dlg = new ExportPasswordDialog();
+        if (dlg.ShowDialog(this) != DialogResult.OK) return;
+
+        using var sfd = new SaveFileDialog
+        {
+            Filter = "D2R MultiPlay Config|*.d2rmp",
+            Title = Strings.MenuExportEncrypted,
+            FileName = "d2r_multiplay_config.d2rmp"
+        };
+        if (sfd.ShowDialog(this) != DialogResult.OK) return;
+
+        try
+        {
+            var encrypted = ConfigCrypto.Encrypt(_config, dlg.Passphrase, dlg.IncludePasswords);
+            File.WriteAllText(sfd.FileName, encrypted, System.Text.Encoding.UTF8);
+            Log(Strings.ConfigExportedEncryptedLog);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, Strings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    private void ImportConfigEncrypted()
+    {
+        using var ofd = new OpenFileDialog
+        {
+            Filter = "D2R MultiPlay Config|*.d2rmp|All Files|*.*",
+            Title = Strings.MenuImportEncrypted
+        };
+        if (ofd.ShowDialog(this) != DialogResult.OK) return;
+
+        using var dlg = new ImportPasswordDialog();
+        if (dlg.ShowDialog(this) != DialogResult.OK) return;
+
+        try
+        {
+            var envelopeJson = File.ReadAllText(ofd.FileName, System.Text.Encoding.UTF8);
+            var imported = ConfigCrypto.Decrypt(envelopeJson, dlg.Passphrase);
+
+            // 导入后用本机 DPAPI 重新封装密码
+            foreach (var acct in imported.Accounts)
+            {
+                if (!string.IsNullOrEmpty(acct.PassEnc))
+                {
+                    // 导出时已包含明文密码（以 DPAPI 形式），在不同机器上需要重新加密
+                    // 但我们的导出是先用源机器 DPAPI 解密再加入明文 JSON
+                    // Decrypt 已经拿到明文 JSON，所以 PassEnc 此时就是明文
+                    // 需要用本机 DPAPI 重新加密
+                    acct.PassEnc = ConfigStore.EncryptPassword(acct.PassEnc);
+                }
+            }
+
+            _config = imported;
+            SaveConfig();
+            RefreshGrid();
+            Log(Strings.ConfigImportedEncryptedLog);
+        }
+        catch (System.Security.Cryptography.CryptographicException)
+        {
+            MessageBox.Show(Strings.ImportWrongPassphrase, Strings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, Strings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
     private void SwitchLanguage(string culture)
