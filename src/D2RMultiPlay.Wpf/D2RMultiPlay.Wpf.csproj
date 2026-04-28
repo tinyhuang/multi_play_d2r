@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>D2RMultiPlay.Wpf</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+
+    <!-- 自包含发布：单文件，无需安装 .NET Runtime -->
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <InvariantGlobalization>false</InvariantGlobalization>
+
+    <!-- 体积优化：关闭 R2R（节省 ~40-60MB），启用压缩（进一步 ~30-40%） -->
+    <!-- 注意：WPF 不兼容 PublishTrimmed，故只用压缩而非裁剪 -->
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <DebugType>embedded</DebugType>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+
+    <!-- 应用图标（可后续替换） -->
+    <!-- <ApplicationIcon>Resources\app.ico</ApplicationIcon> -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\D2RMultiPlay.Core\D2RMultiPlay.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WPF UI Framework (Lepoco) for Fluent design -->
+    <PackageReference Include="Wpf.Ui" Version="3.2.0" />
+    <!-- Segoe Fluent Icons font -->
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Strings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

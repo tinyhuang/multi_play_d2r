@@ -87,7 +87,7 @@ jobs:
 
       - name: Publish (Single File)
         run: >
-          dotnet publish src/D2RMultiPlay.App/D2RMultiPlay.App.csproj -c Release -r win-x64 --self-contained
+            dotnet publish src/D2RMultiPlay.Wpf/D2RMultiPlay.Wpf.csproj -c Release -r win-x64 --self-contained
           -p:Version=${{ steps.ver.outputs.version }}
           -p:FileVersion=${{ steps.ver.outputs.file_version }}
           -p:InformationalVersion=${{ steps.ver.outputs.info_version }}

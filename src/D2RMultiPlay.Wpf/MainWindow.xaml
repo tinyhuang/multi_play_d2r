@@ -1,0 +1,135 @@
+<Window x:Class="D2RMultiPlay.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:local="clr-namespace:D2RMultiPlay.Wpf"
+        mc:Ignorable="d"
+        Title="D2R Multi-Play Manager" Height="820" Width="1280"
+        MinHeight="640" MinWidth="960"
+        WindowStartupLocation="CenterScreen"
+        Icon="pack://application:,,,/Resources/app.ico"
+        Background="{ui:ThemeResource ApplicationBackgroundBrush}"
+        Foreground="{ui:ThemeResource ApplicationForegroundBrush}">
+
+    <DockPanel LastChildFill="True">
+        <!-- 菜单栏 -->
+        <Menu DockPanel.Dock="Top" Background="{ui:ThemeResource ControlBackgroundBrush}">
+            <!-- File Menu -->
+            <MenuItem Header="File">
+                <MenuItem Header="Export Encrypted..." InputGestureText="Ctrl+E" Click="MenuExportEncrypted_Click" />
+                <MenuItem Header="Import Encrypted..." InputGestureText="Ctrl+I" Click="MenuImportEncrypted_Click" />
+                <Separator />
+                <MenuItem Header="Export..." Click="MenuExport_Click" />
+                <MenuItem Header="Import..." Click="MenuImport_Click" />
+                <Separator />
+                <MenuItem Header="Exit" InputGestureText="Alt+F4" Click="MenuExit_Click" />
+            </MenuItem>
+
+            <!-- Accounts Menu -->
+            <MenuItem Header="Accounts">
+                <MenuItem Header="Add Account..." InputGestureText="Ctrl+N" Click="MenuAddAccount_Click" />
+                <MenuItem Header="Launch All" InputGestureText="F5" Click="MenuLaunchAll_Click" />
+                <MenuItem Header="Stop All" InputGestureText="Shift+F5" Click="MenuStopAll_Click" />
+            </MenuItem>
+
+            <!-- Tools Menu -->
+            <MenuItem Header="Tools">
+                <MenuItem Header="Global Settings..." InputGestureText="Ctrl+," Click="MenuGlobalSettings_Click" />
+                <MenuItem Header="Game Window Layout..." InputGestureText="Ctrl+L" Click="MenuMonitorLayout_Click" />
+            </MenuItem>
+
+            <!-- View Menu -->
+            <MenuItem Header="View">
+                <MenuItem Header="Language">
+                    <MenuItem Header="中文" Click="MenuLanguageChinese_Click" />
+                    <MenuItem Header="English" Click="MenuLanguageEnglish_Click" />
+                </MenuItem>
+                <MenuItem Header="Theme">
+                    <MenuItem Header="Dark" Click="MenuThemeDark_Click" />
+                    <MenuItem Header="Light" Click="MenuThemeLight_Click" />
+                </MenuItem>
+                <Separator />
+                <MenuItem Header="Toggle Log" InputGestureText="Ctrl+Shift+L" Click="MenuToggleLog_Click" />
+            </MenuItem>
+
+            <!-- Help Menu -->
+            <MenuItem Header="Help">
+                <MenuItem Header="Quick Start" Click="MenuQuickStart_Click" />
+                <Separator />
+                <MenuItem Header="About..." Click="MenuAbout_Click" />
+            </MenuItem>
+        </Menu>
+
+        <!-- 主内容区 -->
+        <Grid DockPanel.Dock="Top" Margin="8" Height="Auto">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 快速操作按钮 -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
+                <Button x:Name="BtnLaunchAll" Content="▶ Launch All" Click="BtnLaunchAll_Click" />
+                <Button x:Name="BtnStopAll" Content="■ Stop All" Click="BtnStopAll_Click" />
+                <Button x:Name="BtnAddAccount" Content="⌂ Add Account" Click="BtnAddAccount_Click" />
+                <Button x:Name="BtnSettings" Content="⚙ Settings" Click="BtnSettings_Click" />
+                <Button x:Name="BtnLayout" Content="Layout" Click="BtnLayout_Click" />
+            </StackPanel>
+
+            <!-- 语言/主题快速切换 -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="4">
+                <Button x:Name="BtnLangZh" Content="中" Click="BtnLangZh_Click" Width="32" Height="32" />
+                <Button x:Name="BtnLangEn" Content="En" Click="BtnLangEn_Click" Width="32" Height="32" />
+            </StackPanel>
+        </Grid>
+
+        <!-- 数据表格和日志 -->
+        <Grid DockPanel.Dock="Top">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="200" />
+            </Grid.RowDefinitions>
+
+            <!-- DataGrid -->
+            <DataGrid x:Name="DataGridAccounts" 
+                      Grid.Row="0"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      CanUserResizeRows="False"
+                      SelectionMode="Single"
+                      Margin="8">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50" IsReadOnly="True" />
+                    <DataGridCheckBoxColumn Header="Enabled" Binding="{Binding Enabled}" Width="70" />
+                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="120" />
+                    <DataGridTextColumn Header="Email" Binding="{Binding User}" Width="150" />
+                    <DataGridTextColumn Header="Role" Binding="{Binding Role}" Width="100" IsReadOnly="True" />
+                    <DataGridTextColumn Header="Server" Binding="{Binding ServerAddress}" Width="150" />
+                    <DataGridTextColumn Header="Mod" Binding="{Binding Mod}" Width="100" />
+                    <DataGridTextColumn Header="Status" Binding="{Binding StatusDisplay}" Width="100" IsReadOnly="True" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Row="1" Height="4" HorizontalAlignment="Stretch" />
+
+            <!-- Log Panel -->
+            <RichTextBox x:Name="RichTextBoxLog" 
+                         Grid.Row="2"
+                         IsReadOnly="True"
+                         Background="{ui:ThemeResource ControlBackgroundBrush}"
+                         Foreground="{ui:ThemeResource ControlForegroundBrush}"
+                         VerticalScrollBarVisibility="Auto"
+                         Margin="8" />
+        </Grid>
+
+        <!-- 状态栏 -->
+        <StatusBar DockPanel.Dock="Bottom" Background="{ui:ThemeResource ControlBackgroundBrush}">
+            <TextBlock x:Name="StatusLabel" Text="Ready" Foreground="{ui:ThemeResource ControlForegroundBrush}" />
+        </StatusBar>
+    </DockPanel>
+</Window>

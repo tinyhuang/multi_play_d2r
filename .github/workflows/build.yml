@@ -82,7 +82,7 @@ jobs:
 
       - name: Publish (Single File)
         run: >
-          dotnet publish src/D2RMultiPlay.App/D2RMultiPlay.App.csproj -c Release -r win-x64 --self-contained
+            dotnet publish src/D2RMultiPlay.Wpf/D2RMultiPlay.Wpf.csproj -c Release -r win-x64 --self-contained
           -p:Version=${{ steps.ver.outputs.version }}
           -p:FileVersion=${{ steps.ver.outputs.file_version }}
           -p:InformationalVersion=${{ steps.ver.outputs.info_version }}
@@ -93,4 +93,4 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.ver.outputs.artifact_name }}
-          path: src/D2RMultiPlay.App/bin/Release/net8.0-windows/win-x64/publish/
+            path: src/D2RMultiPlay.Wpf/bin/Release/net8.0-windows/win-x64/publish/

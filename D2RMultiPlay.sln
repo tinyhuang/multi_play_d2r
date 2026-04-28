@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "D2RMultiPlay.Core", "src\D2RMultiPlay.Core\D2RMultiPlay.Core.csproj", "{A1B2C3D4-1234-5678-9ABC-DEF012345678}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "D2RMultiPlay.App", "src\D2RMultiPlay.App\D2RMultiPlay.App.csproj", "{B2C3D4E5-2345-6789-ABCD-EF0123456789}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "D2RMultiPlay.Wpf", "src\D2RMultiPlay.Wpf\D2RMultiPlay.Wpf.csproj", "{D2E3F4A5-3456-789A-BCDE-F01234567890}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "D2RMultiPlay.Core.Tests", "tests\D2RMultiPlay.Core.Tests\D2RMultiPlay.Core.Tests.csproj", "{C3D4E5F6-3456-789A-BCDE-F01234567890}"
 EndProject
@@ -19,10 +19,10 @@ Global
 		{A1B2C3D4-1234-5678-9ABC-DEF012345678}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1B2C3D4-1234-5678-9ABC-DEF012345678}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1B2C3D4-1234-5678-9ABC-DEF012345678}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B2C3D4E5-2345-6789-ABCD-EF0123456789}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B2C3D4E5-2345-6789-ABCD-EF0123456789}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B2C3D4E5-2345-6789-ABCD-EF0123456789}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B2C3D4E5-2345-6789-ABCD-EF0123456789}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2E3F4A5-3456-789A-BCDE-F01234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2E3F4A5-3456-789A-BCDE-F01234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2E3F4A5-3456-789A-BCDE-F01234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2E3F4A5-3456-789A-BCDE-F01234567890}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C3D4E5F6-3456-789A-BCDE-F01234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C3D4E5F6-3456-789A-BCDE-F01234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C3D4E5F6-3456-789A-BCDE-F01234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
