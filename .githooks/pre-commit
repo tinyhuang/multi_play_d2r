@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+
+expected_name="tinyhuang"
+expected_email="tinyhuang@163.com"
+
+current_name="$(git config user.name)"
+current_email="$(git config user.email)"
+
+if [ "$current_name" != "$expected_name" ] || [ "$current_email" != "$expected_email" ]; then
+  echo "ERROR: This repository only allows commits as $expected_name <$expected_email>." >&2
+  echo "Current git identity: $current_name <$current_email>" >&2
+  echo "Fix it with:" >&2
+  echo "  git config user.name $expected_name" >&2
+  echo "  git config user.email $expected_email" >&2
+  exit 1
+fi
+
+exit 0

@@ -2,10 +2,23 @@ $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $errors = @()
+$expectedName = 'tinyhuang'
+$expectedEmail = 'tinyhuang@163.com'
 
 function Add-CheckError {
     param([string]$Message)
     $script:errors += $Message
+}
+
+function Read-GitValue {
+    param([string[]]$GitArgs)
+
+    $value = & git -C $repoRoot @GitArgs
+    if ($LASTEXITCODE -ne 0 -or $null -eq $value) {
+        return ''
+    }
+
+    return ($value | Out-String).Trim()
 }
 
 # 1) WinForms project should not enable Native AOT / full trimming.
@@ -80,6 +93,19 @@ foreach ($action in $requiredActions.Keys) {
             Add-CheckError "build.yml: $action must be v$($requiredActions[$action]) or higher, found v$ver."
         }
     }
+}
+
+# 6) Enforce commit identity policy on checked out HEAD.
+$headAuthorName = Read-GitValue @('show', '-s', '--format=%an', 'HEAD')
+$headAuthorEmail = Read-GitValue @('show', '-s', '--format=%ae', 'HEAD')
+$headCommitterName = Read-GitValue @('show', '-s', '--format=%cn', 'HEAD')
+$headCommitterEmail = Read-GitValue @('show', '-s', '--format=%ce', 'HEAD')
+
+if ($headAuthorName -ne $expectedName -or $headAuthorEmail -ne $expectedEmail) {
+    Add-CheckError "HEAD author must be $expectedName <$expectedEmail>, found $headAuthorName <$headAuthorEmail>."
+}
+if ($headCommitterName -ne $expectedName -or $headCommitterEmail -ne $expectedEmail) {
+    Add-CheckError "HEAD committer must be $expectedName <$expectedEmail>, found $headCommitterName <$headCommitterEmail>."
 }
 
 if ($errors.Count -gt 0) {

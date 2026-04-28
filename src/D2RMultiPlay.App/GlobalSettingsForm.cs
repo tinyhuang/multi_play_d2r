@@ -87,7 +87,7 @@ public sealed class GlobalSettingsForm : Form
 
         var hintLabel = new Label
         {
-            Text = "账号留空时会使用这里的默认服务器。",
+            Text = S.ServerHint,
             AutoSize = true,
             ForeColor = SystemColors.GrayText,
             Margin = new Padding(0, 0, 0, 8)
@@ -151,7 +151,9 @@ public sealed class GlobalSettingsForm : Form
             MutexName = Result.MutexName,
             ProfilesRoot = Result.ProfilesRoot,
             SlaveAffinityMask = Result.SlaveAffinityMask,
-            UiCulture = Result.UiCulture
+            UiCulture = Result.UiCulture,
+            UiTheme = Result.UiTheme,
+            IconStyle = Result.IconStyle
         };
 
         DialogResult = DialogResult.OK;

@@ -25,6 +25,13 @@ public static class ConfigStore
 
     // ---- 读写 ----
 
+    private static AppConfig CreateDefaultConfig()
+    {
+        var cfg = new AppConfig();
+        cfg.Global.ProfilesRoot = DefaultProfilesRoot;
+        return cfg;
+    }
+
     /// <summary>
     /// 从磁盘加载配置；文件不存在则返回默认配置
     /// </summary>
@@ -32,15 +39,39 @@ public static class ConfigStore
     {
         path ??= DefaultConfigPath;
         if (!File.Exists(path))
-        {
-            var cfg = new AppConfig();
-            cfg.Global.ProfilesRoot = DefaultProfilesRoot;
-            return cfg;
-        }
+            return CreateDefaultConfig();
 
-        var json = File.ReadAllText(path, Encoding.UTF8);
-        var config = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.AppConfig);
-        return config ?? new AppConfig();
+        try
+        {
+            var json = File.ReadAllText(path, Encoding.UTF8);
+            var config = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.AppConfig) ?? CreateDefaultConfig();
+
+            if (string.IsNullOrWhiteSpace(config.Global.ProfilesRoot))
+                config.Global.ProfilesRoot = DefaultProfilesRoot;
+            if (string.IsNullOrWhiteSpace(config.Global.UiCulture))
+                config.Global.UiCulture = "zh-CN";
+            if (string.IsNullOrWhiteSpace(config.Global.UiTheme))
+                config.Global.UiTheme = "dark";
+            if (string.IsNullOrWhiteSpace(config.Global.IconStyle))
+                config.Global.IconStyle = "gamer";
+
+            return config;
+        }
+        catch
+        {
+            // 配置损坏时回退默认值，避免程序启动即崩溃。
+            try
+            {
+                var broken = path + ".broken-" + DateTime.Now.ToString("yyyyMMdd-HHmmss");
+                File.Move(path, broken, overwrite: true);
+            }
+            catch
+            {
+                // ignore backup failure
+            }
+
+            return CreateDefaultConfig();
+        }
     }
 
     /// <summary>

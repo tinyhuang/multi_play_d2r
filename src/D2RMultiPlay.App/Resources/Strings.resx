@@ -41,16 +41,28 @@
   <data name="Error" xml:space="preserve"><value>Error</value></data>
   <data name="Warning" xml:space="preserve"><value>Warning</value></data>
   <data name="Info" xml:space="preserve"><value>Info</value></data>
+  <data name="AppAlreadyRunning" xml:space="preserve"><value>D2R Multi-Play Manager is already running.</value></data>
   <data name="Yes" xml:space="preserve"><value>Yes</value></data>
   <data name="No" xml:space="preserve"><value>No</value></data>
 
   <!-- ===== MainForm ===== -->
   <data name="MenuFile" xml:space="preserve"><value>&amp;File</value></data>
+  <data name="MenuAccounts" xml:space="preserve"><value>&amp;Accounts</value></data>
+  <data name="MenuTools" xml:space="preserve"><value>&amp;Tools</value></data>
+  <data name="MenuView" xml:space="preserve"><value>&amp;View</value></data>
   <data name="MenuGlobalSettings" xml:space="preserve"><value>&amp;Global Settings</value></data>
   <data name="MenuImport" xml:space="preserve"><value>&amp;Import Config...</value></data>
   <data name="MenuExport" xml:space="preserve"><value>&amp;Export Config...</value></data>
   <data name="MenuExit" xml:space="preserve"><value>E&amp;xit</value></data>
   <data name="MenuLanguage" xml:space="preserve"><value>&amp;Language</value></data>
+  <data name="MenuTheme" xml:space="preserve"><value>&amp;Theme</value></data>
+  <data name="MenuThemeDark" xml:space="preserve"><value>Dark</value></data>
+  <data name="MenuThemeLight" xml:space="preserve"><value>Light</value></data>
+  <data name="MenuIconStyle" xml:space="preserve"><value>&amp;Icons</value></data>
+  <data name="MenuIconStyleGamer" xml:space="preserve"><value>Gamer Icons</value></data>
+  <data name="MenuIconStylePlain" xml:space="preserve"><value>Text Only</value></data>
+  <data name="MenuToggleLog" xml:space="preserve"><value>Show/Hide &amp;Log</value></data>
+  <data name="MenuQuickStart" xml:space="preserve"><value>&amp;Quick Start</value></data>
   <data name="MenuHelp" xml:space="preserve"><value>&amp;Help</value></data>
   <data name="MenuAbout" xml:space="preserve"><value>&amp;About</value></data>
   <data name="MenuLayout" xml:space="preserve"><value>Game Window &amp;Layout</value></data>
@@ -61,6 +73,8 @@
   <data name="BtnEdit" xml:space="preserve"><value>Edit</value></data>
   <data name="BtnDelete" xml:space="preserve"><value>Delete</value></data>
   <data name="BtnLaunch" xml:space="preserve"><value>Launch</value></data>
+  <data name="BtnStop" xml:space="preserve"><value>Stop</value></data>
+  <data name="BtnDisabled" xml:space="preserve"><value>Disabled</value></data>
   <data name="BtnReconnect" xml:space="preserve"><value>Reconnect</value></data>
 
   <data name="ColId" xml:space="preserve"><value>ID</value></data>
@@ -68,6 +82,7 @@
   <data name="ColName" xml:space="preserve"><value>Name</value></data>
   <data name="ColEmail" xml:space="preserve"><value>Battle.net Email</value></data>
   <data name="ColRole" xml:space="preserve"><value>Role</value></data>
+  <data name="ColServer" xml:space="preserve"><value>Server</value></data>
   <data name="ColMod" xml:space="preserve"><value>Mod</value></data>
   <data name="ColStatus" xml:space="preserve"><value>Status</value></data>
   <data name="ColActions" xml:space="preserve"><value>Actions</value></data>
@@ -80,6 +95,27 @@
   <data name="HandleNotFound" xml:space="preserve"><value>handle.exe not found. Please download it from Microsoft Sysinternals and configure the path in Global Settings.</value></data>
   <data name="HandleNotFoundTitle" xml:space="preserve"><value>handle.exe Missing</value></data>
   <data name="HandleDownloadPrompt" xml:space="preserve"><value>Open Sysinternals download page?</value></data>
+  <data name="HandleRequiredReminder" xml:space="preserve"><value>handle.exe is required for multi-launch mutex handling. Configure it now to avoid launch failures.</value></data>
+  <data name="HandleDownloadLink" xml:space="preserve"><value>Download handle.exe</value></data>
+
+  <data name="StatusReady" xml:space="preserve"><value>Ready</value></data>
+  <data name="StatusWaitingFormat" xml:space="preserve"><value>Waiting {0}s...</value></data>
+  <data name="StatusConfigured" xml:space="preserve"><value>Configured</value></data>
+  <data name="StatusRequired" xml:space="preserve"><value>Required</value></data>
+  <data name="AlreadyRunningLog" xml:space="preserve"><value>[Info] Account {0} is already running.</value></data>
+  <data name="ConfigImportedLog" xml:space="preserve"><value>[Info] Config imported successfully.</value></data>
+  <data name="ConfigExportedLog" xml:space="preserve"><value>[Info] Config exported.</value></data>
+  <data name="MissingD2rPath" xml:space="preserve"><value>D2R.exe path</value></data>
+  <data name="MissingHandlePath" xml:space="preserve"><value>handle.exe path</value></data>
+  <data name="LaunchPrereqMessage" xml:space="preserve"><value>The following required settings are missing or invalid:\n- {0}\n\nPlease complete them before launching.</value></data>
+  <data name="SelectHandleExeTitle" xml:space="preserve"><value>Select handle.exe</value></data>
+  <data name="SelectD2rExeTitle" xml:space="preserve"><value>Select D2R.exe</value></data>
+  <data name="QuickD2rLabel" xml:space="preserve"><value>D2R.exe Path (Required)</value></data>
+  <data name="QuickHandleLabel" xml:space="preserve"><value>handle.exe Path (Required)</value></data>
+  <data name="StartupNotice" xml:space="preserve"><value>International version tested only. China region support can be considered when there is demand.</value></data>
+  <data name="QuickStartContent" xml:space="preserve"><value>Quick Start\n\n1. Set D2R.exe and handle.exe first.\n2. Add accounts with Battle.net email and password.\n3. Use slave role for lower GPU load when needed.\n4. Place windows in Game Window Layout.\n5. Click Launch All.\n\nNote: International version tested only. China region support can be considered when there is demand.</value></data>
+  <data name="AboutContent" xml:space="preserve"><value>D2R Multi-Play Manager\nVersion: {0}\nBuild: {1}\n\nA compliant multi-instance launcher for Diablo II: Resurrected.\nUses Sysinternals handle.exe for mutex handling.\n\nInternational version tested only. China region support can be considered when there is demand.\n\nhttps://github.com/tinyhuang/multi_play_d2r</value></data>
+  <data name="IntlOnlyNote" xml:space="preserve"><value>International version tested only. China region support can be considered when there is demand.</value></data>
 
   <!-- ===== AccountEditor ===== -->
   <data name="AccountEditorTitle" xml:space="preserve"><value>Edit Account</value></data>
@@ -87,9 +123,16 @@
   <data name="LblPassword" xml:space="preserve"><value>Password:</value></data>
   <data name="LblName" xml:space="preserve"><value>Display Name:</value></data>
   <data name="LblRole" xml:space="preserve"><value>Role:</value></data>
+  <data name="ChkEnabled" xml:space="preserve"><value>Enabled</value></data>
   <data name="LblMod" xml:space="preserve"><value>Mod:</value></data>
   <data name="LblOptions" xml:space="preserve"><value>Extra Options:</value></data>
   <data name="LblExePath" xml:space="preserve"><value>D2R.exe Override:</value></data>
+  <data name="LblServerOverride" xml:space="preserve"><value>Server Override:</value></data>
+  <data name="ServerUseGlobalDefault" xml:space="preserve"><value>(Use Global Default)</value></data>
+  <data name="LblWindowWidth" xml:space="preserve"><value>Window Width:</value></data>
+  <data name="LblWindowHeight" xml:space="preserve"><value>Window Height:</value></data>
+  <data name="LblLaunchPreview" xml:space="preserve"><value>Launch Preview:</value></data>
+  <data name="PreviewLayoutHint" xml:space="preserve"><value>Set window position in the main window layout panel.</value></data>
   <data name="RoleMaster" xml:space="preserve"><value>Master (Main)</value></data>
   <data name="RoleSlave" xml:space="preserve"><value>Slave (AFK)</value></data>
 
@@ -98,6 +141,7 @@
   <data name="LblD2rExe" xml:space="preserve"><value>D2R.exe Path:</value></data>
   <data name="LblHandleExe" xml:space="preserve"><value>handle.exe Path:</value></data>
   <data name="LblServer" xml:space="preserve"><value>Server Address:</value></data>
+  <data name="ServerHint" xml:space="preserve"><value>If account-level server is empty, this global server will be used.</value></data>
   <data name="LblInterval" xml:space="preserve"><value>Launch Interval (sec):</value></data>
   <data name="LblMutexName" xml:space="preserve"><value>Mutex Name:</value></data>
 

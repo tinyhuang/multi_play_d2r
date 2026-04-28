@@ -30,6 +30,8 @@ public partial class MainForm : Form
     private Button _btnSettings = null!;
     private Button _btnLangZh = null!;
     private Button _btnLangEn = null!;
+    private Label _lblQuickD2r = null!;
+    private Label _lblQuickHandle = null!;
     private TextBox _txtD2rPath = null!;
     private Button _btnBrowseD2r = null!;
     private Label _lblD2rStatus = null!;
@@ -41,6 +43,7 @@ public partial class MainForm : Form
     private StatusStrip _statusStrip = null!;
     private ToolStripStatusLabel _statusLabel = null!;
     private ToolStripStatusLabel _versionLabel = null!;
+    private bool _handleReminderShown;
     private readonly BuildInfo _buildInfo = BuildInfo.ReadCurrent();
 
     public MainForm(AppConfig config)
@@ -62,8 +65,8 @@ public partial class MainForm : Form
     private void InitializeComponent()
     {
         Text = Strings.AppTitle;
-        Size = new Size(900, 650);
-        MinimumSize = new Size(700, 500);
+        Size = new Size(1280, 820);
+        MinimumSize = new Size(960, 640);
         StartPosition = FormStartPosition.CenterScreen;
         Font = new Font("Segoe UI", 9F);
 
@@ -71,7 +74,7 @@ public partial class MainForm : Form
         {
             Dock = DockStyle.Fill,
             Orientation = Orientation.Horizontal,
-            SplitterDistance = 380,
+            SplitterDistance = 560,
             Panel1MinSize = 200,
             Panel2MinSize = 100
         };
@@ -81,26 +84,53 @@ public partial class MainForm : Form
     private void SetupMenu()
     {
         _menuStrip = new MenuStrip();
+        _menuStrip.GripStyle = ToolStripGripStyle.Visible;
 
         // 文件菜单
         var fileMenu = new ToolStripMenuItem(Strings.MenuFile);
-        fileMenu.DropDownItems.Add(Strings.MenuGlobalSettings, null, (_, _) => ShowGlobalSettings());
-        fileMenu.DropDownItems.Add(Strings.MenuLayout, null, (_, _) => ShowMonitorLayout());
+        fileMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuImport, null, (_, _) => ImportConfig()) { ShortcutKeys = Keys.Control | Keys.I });
+        fileMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuExport, null, (_, _) => ExportConfig()) { ShortcutKeys = Keys.Control | Keys.E });
         fileMenu.DropDownItems.Add(new ToolStripSeparator());
-        fileMenu.DropDownItems.Add(Strings.MenuImport, null, (_, _) => ImportConfig());
-        fileMenu.DropDownItems.Add(Strings.MenuExport, null, (_, _) => ExportConfig());
-        fileMenu.DropDownItems.Add(new ToolStripSeparator());
-        fileMenu.DropDownItems.Add(Strings.MenuExit, null, (_, _) => Close());
+        fileMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuExit, null, (_, _) => Close()) { ShortcutKeys = Keys.Alt | Keys.F4 });
         _menuStrip.Items.Add(fileMenu);
 
-        // 语言菜单
+        // 账号菜单
+        var accountMenu = new ToolStripMenuItem(Strings.MenuAccounts);
+        accountMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.BtnAddAccount, null, (_, _) => AddAccount()) { ShortcutKeys = Keys.Control | Keys.N });
+        accountMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.BtnLaunchAll, null, async (_, _) => await LaunchAllAsync()) { ShortcutKeys = Keys.F5 });
+        accountMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.BtnStopAll, null, (_, _) => StopAll()) { ShortcutKeys = Keys.Shift | Keys.F5 });
+        _menuStrip.Items.Add(accountMenu);
+
+        // 工具菜单
+        var toolsMenu = new ToolStripMenuItem(Strings.MenuTools);
+        toolsMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuGlobalSettings, null, (_, _) => ShowGlobalSettings()) { ShortcutKeys = Keys.Control | Keys.Oemcomma });
+        toolsMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuLayout, null, (_, _) => ShowMonitorLayout()) { ShortcutKeys = Keys.Control | Keys.L });
+        _menuStrip.Items.Add(toolsMenu);
+
+        // 视图菜单
+        var viewMenu = new ToolStripMenuItem(Strings.MenuView);
         var langMenu = new ToolStripMenuItem(Strings.MenuLanguage);
         langMenu.DropDownItems.Add("中文 (简体)", null, (_, _) => SwitchLanguage("zh-CN"));
         langMenu.DropDownItems.Add("English", null, (_, _) => SwitchLanguage("en-US"));
-        _menuStrip.Items.Add(langMenu);
+
+        var themeMenu = new ToolStripMenuItem(Strings.MenuTheme);
+        themeMenu.DropDownItems.Add(Strings.MenuThemeDark, null, (_, _) => SwitchTheme("dark"));
+        themeMenu.DropDownItems.Add(Strings.MenuThemeLight, null, (_, _) => SwitchTheme("light"));
+
+        var iconMenu = new ToolStripMenuItem(Strings.MenuIconStyle);
+        iconMenu.DropDownItems.Add(Strings.MenuIconStyleGamer, null, (_, _) => SwitchIconStyle("gamer"));
+        iconMenu.DropDownItems.Add(Strings.MenuIconStylePlain, null, (_, _) => SwitchIconStyle("plain"));
+
+        viewMenu.DropDownItems.Add(langMenu);
+        viewMenu.DropDownItems.Add(themeMenu);
+        viewMenu.DropDownItems.Add(iconMenu);
+        viewMenu.DropDownItems.Add(new ToolStripMenuItem(Strings.MenuToggleLog, null, (_, _) => ToggleLogPanel()) { ShortcutKeys = Keys.Control | Keys.Shift | Keys.L });
+        _menuStrip.Items.Add(viewMenu);
 
         // 帮助菜单
         var helpMenu = new ToolStripMenuItem(Strings.MenuHelp);
+        helpMenu.DropDownItems.Add(Strings.MenuQuickStart, null, (_, _) => ShowQuickStart());
+        helpMenu.DropDownItems.Add(new ToolStripSeparator());
         helpMenu.DropDownItems.Add(Strings.MenuAbout, null, (_, _) => ShowAbout());
         _menuStrip.Items.Add(helpMenu);
 
@@ -122,19 +152,27 @@ public partial class MainForm : Form
             RowHeadersVisible = false,
             AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
             BackgroundColor = SystemColors.Window,
-            BorderStyle = BorderStyle.None
+            BorderStyle = BorderStyle.None,
+            EnableHeadersVisualStyles = false,
+            GridColor = Color.FromArgb(228, 233, 240)
         };
+        _grid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(243, 246, 251);
+        _grid.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(47, 53, 66);
+        _grid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+        _grid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(225, 239, 255);
+        _grid.DefaultCellStyle.SelectionForeColor = Color.Black;
+        _grid.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(249, 251, 254);
 
         var colId = new DataGridViewTextBoxColumn { Name = "colId", HeaderText = Strings.ColId, Width = 40, FillWeight = 7, ReadOnly = true };
-        var colEnabled = new DataGridViewCheckBoxColumn { Name = "colEnabled", HeaderText = "启用", Width = 55, FillWeight = 8, ReadOnly = false };
+        var colEnabled = new DataGridViewCheckBoxColumn { Name = "colEnabled", HeaderText = Strings.ColEnabled, Width = 55, FillWeight = 8, ReadOnly = false };
         var colName = new DataGridViewTextBoxColumn { Name = "colName", HeaderText = Strings.ColName, FillWeight = 16, ReadOnly = true };
         var colUser = new DataGridViewTextBoxColumn { Name = "colUser", HeaderText = Strings.ColEmail, FillWeight = 22, ReadOnly = true };
         var colRole = new DataGridViewTextBoxColumn { Name = "colRole", HeaderText = Strings.ColRole, Width = 80, FillWeight = 10, ReadOnly = true };
-        var colServer = new DataGridViewTextBoxColumn { Name = "colServer", HeaderText = SServerHeader(), FillWeight = 17, ReadOnly = true };
+        var colServer = new DataGridViewTextBoxColumn { Name = "colServer", HeaderText = Strings.ColServer, FillWeight = 17, ReadOnly = true };
         var colMod = new DataGridViewTextBoxColumn { Name = "colMod", HeaderText = Strings.ColMod, Width = 80, FillWeight = 9, ReadOnly = true };
         var colStatus = new DataGridViewTextBoxColumn { Name = "colStatus", HeaderText = Strings.ColStatus, Width = 80, FillWeight = 9, ReadOnly = true };
         var colEdit = new DataGridViewButtonColumn { Name = "colEdit", HeaderText = "", Text = Strings.BtnEdit, UseColumnTextForButtonValue = true, Width = 80, FillWeight = 10, ReadOnly = true };
-        var colLaunch = new DataGridViewButtonColumn { Name = "colLaunch", HeaderText = "", Text = Strings.BtnLaunch, UseColumnTextForButtonValue = true, Width = 90, FillWeight = 12, ReadOnly = true };
+        var colLaunch = new DataGridViewButtonColumn { Name = "colLaunch", HeaderText = "", UseColumnTextForButtonValue = false, Width = 90, FillWeight = 12, ReadOnly = true };
 
         _grid.Columns.AddRange(colId, colEnabled, colName, colUser, colRole, colServer, colMod, colStatus, colEdit, colLaunch);
 
@@ -204,13 +242,14 @@ public partial class MainForm : Form
         quickConfig.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         quickConfig.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
-        quickConfig.Controls.Add(new Label
+        _lblQuickD2r = new Label
         {
-            Text = "D2R.exe 路径 / Path (必填 Required)",
+            Text = Strings.QuickD2rLabel,
             Anchor = AnchorStyles.Left,
             AutoSize = true,
             Margin = new Padding(0, 7, 8, 0)
-        }, 0, 0);
+        };
+        quickConfig.Controls.Add(_lblQuickD2r, 0, 0);
 
         _txtD2rPath = new TextBox { Dock = DockStyle.Fill, Margin = new Padding(0, 3, 6, 3) };
         _txtD2rPath.Leave += (_, _) => ApplyQuickD2rPath();
@@ -225,13 +264,14 @@ public partial class MainForm : Form
         _lblD2rStatus = new Label { AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 7, 0, 0) };
         quickConfig.Controls.Add(_lblD2rStatus, 4, 0);
 
-        quickConfig.Controls.Add(new Label
+        _lblQuickHandle = new Label
         {
-            Text = "handle.exe 路径 / Path",
+            Text = Strings.QuickHandleLabel,
             Anchor = AnchorStyles.Left,
             AutoSize = true,
             Margin = new Padding(0, 7, 8, 0)
-        }, 0, 1);
+        };
+        quickConfig.Controls.Add(_lblQuickHandle, 0, 1);
 
         _txtHandlePath = new TextBox { Dock = DockStyle.Fill, Margin = new Padding(0, 3, 6, 3) };
         _txtHandlePath.Leave += (_, _) => ApplyQuickHandlePath();
@@ -241,7 +281,7 @@ public partial class MainForm : Form
         _btnBrowseHandle.Click += (_, _) => BrowseHandleExe();
         quickConfig.Controls.Add(_btnBrowseHandle, 2, 1);
 
-        _lnkHandleDownload = new LinkLabel { Text = "下载 handle.exe", AutoSize = true, Margin = new Padding(0, 8, 10, 0) };
+        _lnkHandleDownload = new LinkLabel { Text = Strings.HandleDownloadLink, AutoSize = true, Margin = new Padding(0, 8, 10, 0) };
         _lnkHandleDownload.LinkClicked += (_, _) => OpenHandleDownload();
         quickConfig.Controls.Add(_lnkHandleDownload, 3, 1);
 
@@ -268,6 +308,57 @@ public partial class MainForm : Form
         };
     }
 
+    private void ApplyVisualStyles()
+    {
+        bool dark = IsDarkTheme();
+
+        BackColor = dark ? Color.FromArgb(30, 33, 43) : SystemColors.Control;
+        ForeColor = dark ? Color.FromArgb(228, 232, 241) : SystemColors.ControlText;
+
+        _btnLaunchAll.FlatStyle = FlatStyle.Flat;
+        _btnLaunchAll.FlatAppearance.BorderSize = 0;
+        _btnLaunchAll.BackColor = Color.FromArgb(212, 160, 23);
+        _btnLaunchAll.ForeColor = Color.Black;
+
+        _btnStopAll.FlatStyle = FlatStyle.Flat;
+        _btnStopAll.FlatAppearance.BorderSize = 0;
+        _btnStopAll.BackColor = Color.FromArgb(230, 57, 70);
+        _btnStopAll.ForeColor = Color.White;
+
+        foreach (var btn in new[] { _btnAddAccount, _btnLayout, _btnSettings, _btnLangZh, _btnLangEn, _btnBrowseD2r, _btnBrowseHandle })
+        {
+            btn.FlatStyle = FlatStyle.Flat;
+            btn.FlatAppearance.BorderColor = dark ? Color.FromArgb(84, 89, 109) : Color.FromArgb(206, 214, 224);
+            btn.BackColor = dark ? Color.FromArgb(53, 58, 75) : Color.FromArgb(248, 250, 253);
+            btn.ForeColor = dark ? Color.FromArgb(228, 232, 241) : Color.Black;
+        }
+
+        _grid.BackgroundColor = dark ? Color.FromArgb(43, 45, 66) : SystemColors.Window;
+        _grid.GridColor = dark ? Color.FromArgb(69, 74, 94) : Color.FromArgb(228, 233, 240);
+        _grid.ColumnHeadersDefaultCellStyle.BackColor = dark ? Color.FromArgb(53, 58, 75) : Color.FromArgb(243, 246, 251);
+        _grid.ColumnHeadersDefaultCellStyle.ForeColor = dark ? Color.FromArgb(236, 239, 247) : Color.FromArgb(47, 53, 66);
+        _grid.DefaultCellStyle.BackColor = dark ? Color.FromArgb(43, 45, 66) : Color.White;
+        _grid.DefaultCellStyle.ForeColor = dark ? Color.FromArgb(228, 232, 241) : Color.Black;
+        _grid.DefaultCellStyle.SelectionBackColor = dark ? Color.FromArgb(90, 102, 147) : Color.FromArgb(225, 239, 255);
+        _grid.DefaultCellStyle.SelectionForeColor = dark ? Color.White : Color.Black;
+        _grid.AlternatingRowsDefaultCellStyle.BackColor = dark ? Color.FromArgb(48, 51, 73) : Color.FromArgb(249, 251, 254);
+
+        _splitContainer.Panel1.BackColor = dark ? Color.FromArgb(36, 39, 52) : SystemColors.Control;
+        _splitContainer.Panel2.BackColor = dark ? Color.FromArgb(26, 27, 36) : SystemColors.Control;
+        _splitContainer.BorderStyle = BorderStyle.FixedSingle;
+
+        _statusStrip.BackColor = dark ? Color.FromArgb(36, 39, 52) : SystemColors.Control;
+        _statusStrip.ForeColor = dark ? Color.FromArgb(228, 232, 241) : SystemColors.ControlText;
+
+        _btnLaunchAll.Text = Iconize(Strings.BtnLaunchAll, "launch");
+        _btnStopAll.Text = Iconize(Strings.BtnStopAll, "stop");
+        _btnAddAccount.Text = Iconize(Strings.BtnAddAccount, "add");
+        _btnLayout.Text = Iconize(Strings.MenuLayout, "layout");
+        _btnSettings.Text = Iconize(Strings.MenuGlobalSettings, "settings");
+
+        UpdateActionButtons();
+    }
+
     private void SetupLog()
     {
         _logBox = new RichTextBox
@@ -285,7 +376,7 @@ public partial class MainForm : Form
     private void SetupStatusBar()
     {
         _statusStrip = new StatusStrip();
-        _statusLabel = new ToolStripStatusLabel("Ready");
+        _statusLabel = new ToolStripStatusLabel(Strings.StatusReady);
         _versionLabel = new ToolStripStatusLabel($"Build: {_buildInfo.InformationalVersion}")
         {
             Spring = true,
@@ -323,7 +414,7 @@ public partial class MainForm : Form
                           : (state?.IsAlive == true) ? Strings.StatusAlive
                           : Strings.StatusDead;
 
-            _grid.Rows.Add(
+            int rowIndex = _grid.Rows.Add(
                 acct.Id,
                 acct.Enabled,
                 string.IsNullOrEmpty(acct.Name) ? $"Account {acct.Id}" : acct.Name,
@@ -332,7 +423,29 @@ public partial class MainForm : Form
                 ResolveServerText(acct),
                 acct.Mod,
                 status);
+
+            var actionCell = (DataGridViewButtonCell)_grid.Rows[rowIndex].Cells["colLaunch"];
+            if (!acct.Enabled)
+            {
+                actionCell.Value = Strings.BtnDisabled;
+                actionCell.ReadOnly = true;
+                actionCell.Style.ForeColor = Color.DimGray;
+            }
+            else if (state?.IsAlive == true)
+            {
+                actionCell.Value = Iconize(Strings.BtnStop, "stop");
+                actionCell.ReadOnly = false;
+                actionCell.Style.ForeColor = Color.Firebrick;
+            }
+            else
+            {
+                actionCell.Value = Iconize(Strings.BtnLaunch, "launch");
+                actionCell.ReadOnly = false;
+                actionCell.Style.ForeColor = Color.SeaGreen;
+            }
         }
+
+        UpdateActionButtons();
     }
 
     // ======== 事件处理 ========
@@ -349,7 +462,14 @@ public partial class MainForm : Form
                 EditAccount(acct);
                 break;
             case "colLaunch":
-                _ = LaunchSingleAsync(acct);
+                if (!acct.Enabled)
+                    break;
+
+                var state = _guard.GetState(acct.Id);
+                if (state?.IsAlive == true)
+                    StopSingle(acct.Id);
+                else
+                    _ = LaunchSingleAsync(acct);
                 break;
         }
     }
@@ -416,7 +536,7 @@ public partial class MainForm : Form
                 // 启动间隔
                 if (i < enabledAccounts.Count - 1)
                 {
-                    _statusLabel.Text = $"Waiting {_config.Global.LaunchIntervalSec}s...";
+                    _statusLabel.Text = string.Format(Strings.StatusWaitingFormat, _config.Global.LaunchIntervalSec);
                     await Task.Delay(_config.Global.LaunchIntervalSec * 1000);
                 }
             }
@@ -424,7 +544,7 @@ public partial class MainForm : Form
         finally
         {
             _btnLaunchAll.Enabled = true;
-            _statusLabel.Text = "Ready";
+            _statusLabel.Text = Strings.StatusReady;
             RefreshGrid();
         }
     }
@@ -436,7 +556,7 @@ public partial class MainForm : Form
         var state = _guard.GetState(acct.Id);
         if (state?.IsAlive == true)
         {
-            Log($"[Info] Account {acct.Id} is already running / 账号 {acct.Id} 已在运行。");
+            Log(string.Format(Strings.AlreadyRunningLog, acct.Id));
             return;
         }
 
@@ -502,6 +622,27 @@ public partial class MainForm : Form
             catch { /* 进程已退出 */ }
             _guard.Unregister(state.AccountId);
         }
+        RefreshGrid();
+    }
+
+    private void StopSingle(int accountId)
+    {
+        var state = _guard.GetState(accountId);
+        if (state == null || !state.IsAlive)
+            return;
+
+        try
+        {
+            var proc = Process.GetProcessById((int)state.ProcessId);
+            if (!proc.HasExited)
+                proc.Kill();
+        }
+        catch
+        {
+            // Process already exited.
+        }
+
+        _guard.Unregister(accountId);
         RefreshGrid();
     }
 
@@ -605,7 +746,7 @@ public partial class MainForm : Form
             _config = ConfigStore.Import(json);
             SaveConfig();
             RefreshGrid();
-            Log("[Info] Config imported successfully.");
+            Log(Strings.ConfigImportedLog);
         }
         catch (Exception ex)
         {
@@ -629,7 +770,7 @@ public partial class MainForm : Form
 
         var json = ConfigStore.Export(_config, includePass);
         File.WriteAllText(sfd.FileName, json);
-        Log("[Info] Config exported.");
+        Log(Strings.ConfigExportedLog);
     }
 
     private void SwitchLanguage(string culture)
@@ -641,14 +782,41 @@ public partial class MainForm : Form
         RefreshGrid();
     }
 
+    private void SwitchTheme(string theme)
+    {
+        _config.Global.UiTheme = theme;
+        SaveConfig();
+        ApplyVisualStyles();
+        RefreshGrid();
+    }
+
+    private void SwitchIconStyle(string style)
+    {
+        _config.Global.IconStyle = style;
+        SaveConfig();
+        ApplyVisualStyles();
+        RefreshGrid();
+    }
+
     private void ShowAbout()
     {
         MessageBox.Show(
-            $"D2R Multi-Play Manager\nVersion: {_buildInfo.Version}\nBuild: {_buildInfo.InformationalVersion}\n\n" +
-            "A compliant multi-instance launcher for Diablo II: Resurrected.\n" +
-            "Uses Sysinternals handle.exe for mutex handling.\n\n" +
-            "https://github.com/tinyhuang/multi_play_d2r",
+            string.Format(Strings.AboutContent, _buildInfo.Version, _buildInfo.InformationalVersion),
             Strings.MenuAbout, MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    private void ShowQuickStart()
+    {
+        MessageBox.Show(
+            Strings.QuickStartContent,
+            Strings.MenuQuickStart,
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information);
+    }
+
+    private void ToggleLogPanel()
+    {
+        _splitContainer.Panel2Collapsed = !_splitContainer.Panel2Collapsed;
     }
 
     // ======== 本地化 ========
@@ -663,7 +831,9 @@ public partial class MainForm : Form
         _btnSettings.Text = Strings.MenuGlobalSettings;
         _btnLangZh.Text = "中文";
         _btnLangEn.Text = "English";
-        _lnkHandleDownload.Text = "下载 handle.exe / Download";
+        _lnkHandleDownload.Text = Strings.HandleDownloadLink;
+        _lblQuickD2r.Text = Strings.QuickD2rLabel;
+        _lblQuickHandle.Text = Strings.QuickHandleLabel;
 
         if (_grid.Columns.Count >= 10)
         {
@@ -672,12 +842,13 @@ public partial class MainForm : Form
             _grid.Columns["colName"].HeaderText = Strings.ColName;
             _grid.Columns["colUser"].HeaderText = Strings.ColEmail;
             _grid.Columns["colRole"].HeaderText = Strings.ColRole;
-            _grid.Columns["colServer"].HeaderText = SServerHeader();
+            _grid.Columns["colServer"].HeaderText = Strings.ColServer;
             _grid.Columns["colMod"].HeaderText = Strings.ColMod;
             _grid.Columns["colStatus"].HeaderText = Strings.ColStatus;
         }
 
         UpdateLanguageButtonState();
+        _statusLabel.Text = Strings.StatusReady;
         UpdateD2rStatus();
         UpdateHandleStatus();
 
@@ -685,6 +856,7 @@ public partial class MainForm : Form
         Controls.Remove(_menuStrip);
         _menuStrip.Dispose();
         SetupMenu();
+        ApplyVisualStyles();
     }
 
     // ======== 辅助 ========
@@ -743,7 +915,7 @@ public partial class MainForm : Form
         using var ofd = new OpenFileDialog
         {
             Filter = "handle.exe|handle.exe|Executable|*.exe|All Files|*.*",
-            Title = "Select handle.exe"
+            Title = Strings.SelectHandleExeTitle
         };
 
         if (ofd.ShowDialog(this) != DialogResult.OK)
@@ -758,7 +930,7 @@ public partial class MainForm : Form
         using var ofd = new OpenFileDialog
         {
             Filter = "D2R.exe|D2R.exe|Executable|*.exe|All Files|*.*",
-            Title = "Select D2R.exe"
+            Title = Strings.SelectD2rExeTitle
         };
 
         if (ofd.ShowDialog(this) != DialogResult.OK)
@@ -785,7 +957,7 @@ public partial class MainForm : Form
             return;
 
         bool ok = HandleCli.Exists(_config.Global.HandleExePath);
-        _lblHandleStatus.Text = ok ? "已配置 / OK" : "未配置(必填) / Required";
+        _lblHandleStatus.Text = ok ? Strings.StatusConfigured : Strings.StatusRequired;
         _lblHandleStatus.ForeColor = ok ? Color.SeaGreen : Color.Firebrick;
         _txtHandlePath.BackColor = ok ? SystemColors.Window : Color.MistyRose;
     }
@@ -796,7 +968,7 @@ public partial class MainForm : Form
             return;
 
         bool ok = File.Exists(_config.Global.D2rExePath);
-        _lblD2rStatus.Text = ok ? "已配置 / OK" : "未配置(必填) / Required";
+        _lblD2rStatus.Text = ok ? Strings.StatusConfigured : Strings.StatusRequired;
         _lblD2rStatus.ForeColor = ok ? Color.SeaGreen : Color.Firebrick;
         _txtD2rPath.BackColor = ok ? SystemColors.Window : Color.MistyRose;
     }
@@ -808,9 +980,9 @@ public partial class MainForm : Form
 
         var missing = new List<string>();
         if (!File.Exists(_config.Global.D2rExePath))
-            missing.Add("D2R.exe 路径");
+            missing.Add(Strings.MissingD2rPath);
         if (!HandleCli.Exists(_config.Global.HandleExePath))
-            missing.Add("handle.exe 路径");
+            missing.Add(Strings.MissingHandlePath);
 
         UpdateD2rStatus();
         UpdateHandleStatus();
@@ -819,7 +991,7 @@ public partial class MainForm : Form
             return true;
 
         MessageBox.Show(
-            "以下前置条件未配置正确：\n- " + string.Join("\n- ", missing) + "\n\n请先在主界面补全后再启动。",
+            string.Format(Strings.LaunchPrereqMessage, string.Join("\n- ", missing)),
             Strings.Warning,
             MessageBoxButtons.OK,
             MessageBoxIcon.Warning);
@@ -831,6 +1003,40 @@ public partial class MainForm : Form
         bool zh = string.Equals(_config.Global.UiCulture, "zh-CN", StringComparison.OrdinalIgnoreCase);
         _btnLangZh.Font = new Font(_btnLangZh.Font, zh ? FontStyle.Bold : FontStyle.Regular);
         _btnLangEn.Font = new Font(_btnLangEn.Font, zh ? FontStyle.Regular : FontStyle.Bold);
+    }
+
+    private bool IsDarkTheme() =>
+        string.Equals(_config.Global.UiTheme, "dark", StringComparison.OrdinalIgnoreCase);
+
+    private bool UseGamerIcons() =>
+        !string.Equals(_config.Global.IconStyle, "plain", StringComparison.OrdinalIgnoreCase);
+
+    private string Iconize(string text, string type)
+    {
+        if (!UseGamerIcons())
+            return text;
+
+        var icon = type switch
+        {
+            "launch" => "▶ ",
+            "stop" => "■ ",
+            "add" => "+ ",
+            "layout" => "⌂ ",
+            "settings" => "⚙ ",
+            _ => ""
+        };
+
+        return icon + text;
+    }
+
+    private void UpdateActionButtons()
+    {
+        var states = _guard.GetAllStates().ToList();
+        bool anyRunning = states.Any(s => s.IsAlive);
+        bool anyStoppedEnabled = _config.Accounts.Any(a => a.Enabled && !(states.FirstOrDefault(s => s.AccountId == a.Id)?.IsAlive ?? false));
+
+        _btnLaunchAll.Enabled = anyStoppedEnabled;
+        _btnStopAll.Enabled = anyRunning;
     }
 
     private string ResolveServerText(AccountConfig acct)
@@ -887,8 +1093,6 @@ public partial class MainForm : Form
         acct.Layout.Borderless = false;
     }
 
-    private static string SServerHeader() => "服务器 / Server";
-
     private void Log(string message)
     {
         if (InvokeRequired)
@@ -907,6 +1111,24 @@ public partial class MainForm : Form
             Log(string.Format(Strings.LogDied, e.State.AccountId));
         }
         RefreshGrid();
+    }
+
+    protected override void OnShown(EventArgs e)
+    {
+        base.OnShown(e);
+
+        if (_handleReminderShown)
+            return;
+
+        _handleReminderShown = true;
+        if (!HandleCli.Exists(_config.Global.HandleExePath))
+        {
+            MessageBox.Show(
+                Strings.HandleRequiredReminder + "\n\n" + Strings.IntlOnlyNote,
+                Strings.Warning,
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+        }
     }
 
     protected override void OnFormClosing(FormClosingEventArgs e)
