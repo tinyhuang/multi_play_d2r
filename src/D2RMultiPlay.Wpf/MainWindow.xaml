@@ -101,8 +101,10 @@
                       CanUserDeleteRows="False"
                       CanUserResizeRows="False"
                       SelectionMode="Single"
+                                            MouseDoubleClick="DataGridAccounts_MouseDoubleClick"
                       Margin="8">
                 <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Icon" Binding="{Binding IconHint}" Width="60" IsReadOnly="True" />
                     <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50" IsReadOnly="True" />
                     <DataGridCheckBoxColumn Header="Enabled" Binding="{Binding Enabled}" Width="70" />
                     <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="120" />

@@ -4,13 +4,20 @@
 // ============================================================
 
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 using Microsoft.Win32;
 using D2RMultiPlay.Core.Config;
+using D2RMultiPlay.Core.Guard;
+using D2RMultiPlay.Core.Handles;
+using D2RMultiPlay.Core.Launch;
+using D2RMultiPlay.Core.Monitors;
+using D2RMultiPlay.Core.Windows;
 using D2RMultiPlay.Wpf.Resources;
 
 namespace D2RMultiPlay.Wpf;
@@ -21,13 +28,17 @@ namespace D2RMultiPlay.Wpf;
 public partial class MainWindow : Window
 {
     private AppConfig _config = null!;
-    private ObservableCollection<AccountViewModel> _accounts = new();
+    private readonly ObservableCollection<AccountViewModel> _accounts = new();
+    private readonly ProcessGuard _guard = new();
+    private bool _logVisible = true;
     private static readonly Strings S = new();
 
     public MainWindow()
     {
         InitializeComponent();
+        _guard.StateChanged += Guard_StateChanged;
         Loaded += MainWindow_Loaded;
+        Closed += MainWindow_Closed;
     }
 
     private void MainWindow_Loaded(object? sender, RoutedEventArgs e)
@@ -41,18 +52,41 @@ public partial class MainWindow : Window
 
         _config = App.GlobalConfig;
         DataGridAccounts.ItemsSource = _accounts;
+        _guard.Start();
         RefreshGrid();
         ApplyTheme();
         ApplyLocalization();
     }
 
+    private void MainWindow_Closed(object? sender, EventArgs e)
+    {
+        _guard.Dispose();
+    }
+
+    private void Guard_StateChanged(object? sender, InstanceStateChangedEventArgs e)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            if (e.WasAlive && !e.State.IsAlive)
+            {
+                Log(string.Format(S.LogDied, e.State.AccountId));
+            }
+            RefreshGrid();
+        });
+    }
+
     private void RefreshGrid()
     {
         _accounts.Clear();
+        var states = _guard.GetAllStates();
         foreach (var acct in _config.Accounts)
         {
-            _accounts.Add(new AccountViewModel(acct));
+            var state = states.FirstOrDefault(s => s.AccountId == acct.Id);
+            _accounts.Add(new AccountViewModel(acct, state?.IsAlive == true));
         }
+
+        BtnStopAll.IsEnabled = states.Any(s => s.IsAlive);
+        BtnLaunchAll.IsEnabled = _config.Accounts.Any(a => a.Enabled && !(states.FirstOrDefault(s => s.AccountId == a.Id)?.IsAlive ?? false));
     }
 
     private void Log(string message)
@@ -238,51 +272,59 @@ public partial class MainWindow : Window
 
     private void MenuToggleLog_Click(object sender, RoutedEventArgs e)
     {
-        // TODO: Toggle log panel visibility
+        var grid = (Grid)RichTextBoxLog.Parent;
+        _logVisible = !_logVisible;
+        RichTextBoxLog.Visibility = _logVisible ? Visibility.Visible : Visibility.Collapsed;
+        grid.RowDefinitions[2].Height = _logVisible ? new GridLength(200) : new GridLength(0);
     }
 
     // ===== Help Menu =====
 
     private void MenuQuickStart_Click(object sender, RoutedEventArgs e)
     {
-        // TODO: Show quick start dialog
+        MessageBox.Show(S.QuickStartContent, S.MenuQuickStart, MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void MenuAbout_Click(object sender, RoutedEventArgs e)
     {
-        // TODO: Show about dialog
+        MessageBox.Show(S.AboutContent, S.MenuAbout, MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     // ===== Quick Action Buttons =====
 
-    private void BtnLaunchAll_Click(object? sender, RoutedEventArgs? e)
+    private async void BtnLaunchAll_Click(object? sender, RoutedEventArgs? e)
     {
-        // TODO: Implement launch all accounts
-        Log("Launch All initiated (WIP)");
+        await LaunchAllAsync();
     }
 
     private void BtnStopAll_Click(object? sender, RoutedEventArgs? e)
     {
-        // TODO: Implement stop all accounts
-        Log("Stop All initiated (WIP)");
+        StopAll();
     }
 
     private void BtnAddAccount_Click(object? sender, RoutedEventArgs? e)
     {
-        // TODO: Show account editor dialog
-        Log("Add Account dialog (WIP)");
+        int nextId = _config.Accounts.Count > 0 ? _config.Accounts.Max(a => a.Id) + 1 : 1;
+        var dlg = new AccountEditDialog(nextId, _config.Global) { Owner = this };
+        if (dlg.ShowDialog() != true)
+            return;
+
+        var created = dlg.Result;
+        created.Layout = CreateDefaultLayout(created.Id);
+        _config.Accounts.Add(created);
+        SaveConfig();
+        RefreshGrid();
+        Log($"Account {created.Id} added.");
     }
 
     private void BtnSettings_Click(object? sender, RoutedEventArgs? e)
     {
-        // TODO: Show global settings dialog
-        Log("Global Settings dialog (WIP)");
+        MessageBox.Show("Global settings editor is being migrated to WPF.", S.Info, MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void BtnLayout_Click(object? sender, RoutedEventArgs? e)
     {
-        // TODO: Show monitor layout dialog
-        Log("Monitor Layout dialog (WIP)");
+        MessageBox.Show("Monitor layout editor is being migrated to WPF.", S.Info, MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void BtnLangZh_Click(object sender, RoutedEventArgs e)
@@ -315,21 +357,206 @@ public partial class MainWindow : Window
 
     private void ApplyTheme()
     {
-        bool dark = _config.Global.UiTheme == "dark";
-        // TODO: Apply WPF-UI theme colors based on dark flag
+        bool dark = string.Equals(_config.Global.UiTheme, "dark", StringComparison.OrdinalIgnoreCase);
+        Background = dark ? new SolidColorBrush(Color.FromRgb(30, 33, 43)) : SystemColors.ControlBrush;
     }
 
     private void ApplyLocalization()
     {
         Title = S.AppTitle;
+        BtnLaunchAll.Content = S.BtnLaunchAll;
+        BtnStopAll.Content = S.BtnStopAll;
+        BtnAddAccount.Content = S.BtnAddAccount;
+        BtnLayout.Content = S.MenuLayout;
+        BtnSettings.Content = S.MenuGlobalSettings;
         StatusLabel.Text = S.StatusReady;
-        // TODO: Update all UI text from Strings resources
+    }
+
+    private bool CheckLaunchPrerequisites()
+    {
+        var missing = new List<string>();
+        if (!File.Exists(_config.Global.D2rExePath))
+            missing.Add(S.MissingD2rPath);
+        if (!HandleCli.Exists(_config.Global.HandleExePath))
+            missing.Add(S.MissingHandlePath);
+
+        if (missing.Count == 0)
+            return true;
+
+        MessageBox.Show(
+            string.Format(S.LaunchPrereqMessage, string.Join("\n- ", missing)),
+            S.Warning,
+            MessageBoxButton.OK,
+            MessageBoxImage.Warning);
+        return false;
+    }
+
+    private async Task LaunchAllAsync()
+    {
+        var enabledAccounts = _config.Accounts.Where(a => a.Enabled).ToList();
+        if (enabledAccounts.Count == 0)
+            return;
+
+        if (!CheckLaunchPrerequisites())
+            return;
+
+        BtnLaunchAll.IsEnabled = false;
+        try
+        {
+            for (int i = 0; i < enabledAccounts.Count; i++)
+            {
+                var acct = enabledAccounts[i];
+
+                if (i > 0)
+                {
+                    var (_, handleLog) = HandleCli.FindAndCloseAll(
+                        _config.Global.HandleExePath, HandleCli.DefaultMutexName);
+                    foreach (var line in handleLog)
+                        Log(line);
+                }
+
+                await LaunchSingleCoreAsync(acct);
+
+                if (i < enabledAccounts.Count - 1)
+                    await Task.Delay(_config.Global.LaunchIntervalSec * 1000);
+            }
+        }
+        finally
+        {
+            BtnLaunchAll.IsEnabled = true;
+            RefreshGrid();
+        }
+    }
+
+    private async Task LaunchSingleCoreAsync(AccountConfig acct)
+    {
+        EnsureAccountLayout(acct);
+        acct.Layout.Borderless = false;
+
+        Log(string.Format(S.LogLaunching, acct.Id));
+
+        var presetPath = PresetManager.GetPresetPath(acct.Role);
+        var result = Launcher.Launch(acct, _config.Global, presetPath);
+
+        if (!result.Success)
+        {
+            Log(string.Format(S.LogFailed, acct.Id, result.Error));
+            return;
+        }
+
+        Log(string.Format(S.LogLaunched, acct.Id, result.ProcessId));
+        _guard.Register(acct.Id, result.ProcessId, result.ProcessHandle);
+
+        Log(string.Format(S.LogArranging, acct.Id));
+        bool arranged = await Task.Run(() => WindowOps.ArrangeWindow(result.ProcessId, acct.Layout));
+        if (arranged)
+        {
+            await Task.Delay(1500);
+            _ = await Task.Run(() => WindowOps.ArrangeWindow(result.ProcessId, acct.Layout, 3000));
+            Log(string.Format(S.LogArranged, acct.Id, acct.Layout.X, acct.Layout.Y, acct.Layout.W, acct.Layout.H));
+        }
+    }
+
+    private void StopAll()
+    {
+        foreach (var state in _guard.GetAllStates())
+        {
+            try
+            {
+                var proc = Process.GetProcessById((int)state.ProcessId);
+                if (!proc.HasExited)
+                    proc.Kill();
+            }
+            catch
+            {
+                // ignore already-exited process
+            }
+
+            _guard.Unregister(state.AccountId);
+        }
+
+        RefreshGrid();
+    }
+
+    private WindowLayout CreateDefaultLayout(int accountId)
+    {
+        var monitors = MonitorEnumerator.Enumerate();
+        var primary = monitors.FirstOrDefault(m => m.IsPrimary) ?? monitors.FirstOrDefault();
+        if (primary == null)
+            return new WindowLayout { W = 1280, H = 720, Borderless = false };
+
+        int offset = ((accountId - 1) % 4) * 40;
+        int width = Math.Min(1280, primary.WorkArea.Width);
+        int height = Math.Min(720, primary.WorkArea.Height);
+
+        return new WindowLayout
+        {
+            MonitorId = primary.DeviceName,
+            X = primary.WorkArea.X + Math.Min(offset, Math.Max(0, primary.WorkArea.Width - width)),
+            Y = primary.WorkArea.Y + Math.Min(offset, Math.Max(0, primary.WorkArea.Height - height)),
+            W = width,
+            H = height,
+            Borderless = false,
+        };
+    }
+
+    private void EnsureAccountLayout(AccountConfig acct)
+    {
+        if (acct.Layout == null)
+            acct.Layout = new WindowLayout();
+
+        if (acct.Role.Equals("slave", StringComparison.OrdinalIgnoreCase))
+        {
+            acct.Layout.W = 1280;
+            acct.Layout.H = 720;
+        }
+
+        if (acct.Layout.W <= 0)
+            acct.Layout.W = 1280;
+        if (acct.Layout.H <= 0)
+            acct.Layout.H = 720;
+
+        if (!string.IsNullOrWhiteSpace(acct.Layout.MonitorId))
+            return;
+
+        var fallback = CreateDefaultLayout(acct.Id);
+        acct.Layout.MonitorId = fallback.MonitorId;
+        acct.Layout.X = fallback.X;
+        acct.Layout.Y = fallback.Y;
+        acct.Layout.W = fallback.W;
+        acct.Layout.H = fallback.H;
+        acct.Layout.Borderless = false;
+    }
+
+    private void DataGridAccounts_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (DataGridAccounts.SelectedItem is not AccountViewModel vm)
+            return;
+
+        var acct = _config.Accounts.FirstOrDefault(a => a.Id == vm.Id);
+        if (acct == null)
+            return;
+
+        var dlg = new AccountEditDialog(acct, _config.Global) { Owner = this };
+        if (dlg.ShowDialog() != true)
+            return;
+
+        var idx = _config.Accounts.FindIndex(a => a.Id == acct.Id);
+        if (idx >= 0)
+        {
+            var updated = dlg.Result;
+            updated.Layout = acct.Layout;
+            _config.Accounts[idx] = updated;
+            SaveConfig();
+            RefreshGrid();
+        }
     }
 
     // ===== View Model for DataGrid =====
 
     public class AccountViewModel
     {
+        public string IconHint { get; set; } = "";
         public int Id { get; set; }
         public bool Enabled { get; set; }
         public string Name { get; set; } = "";
@@ -339,8 +566,9 @@ public partial class MainWindow : Window
         public string Mod { get; set; } = "";
         public string StatusDisplay { get; set; } = "Offline";
 
-        public AccountViewModel(AccountConfig cfg)
+        public AccountViewModel(AccountConfig cfg, bool isAlive)
         {
+            IconHint = string.IsNullOrWhiteSpace(cfg.IconPath) ? "-" : "🖼";
             Id = cfg.Id;
             Enabled = cfg.Enabled;
             Name = cfg.Name;
@@ -348,7 +576,7 @@ public partial class MainWindow : Window
             Role = cfg.Role;
             ServerAddress = cfg.ServerAddress;
             Mod = cfg.Mod;
-            StatusDisplay = Enabled ? "Ready" : "Disabled";
+            StatusDisplay = !Enabled ? S.StatusDisabled : (isAlive ? S.StatusAlive : S.StatusDead);
         }
     }
 }

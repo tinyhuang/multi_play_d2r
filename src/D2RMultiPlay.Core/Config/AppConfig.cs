@@ -99,6 +99,9 @@ public sealed class AccountConfig
     /// <summary>显示名称（仅 UI 展示用）</summary>
     public string Name { get; set; } = "";
 
+    /// <summary>账号图标文件路径（可选，.ico/.png）</summary>
+    public string IconPath { get; set; } = "";
+
     /// <summary>角色：master（主玩）或 slave（挂机）</summary>
     public string Role { get; set; } = "master";
 
