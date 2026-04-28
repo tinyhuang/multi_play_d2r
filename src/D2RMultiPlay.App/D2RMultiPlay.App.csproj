@@ -9,11 +9,17 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
 
     <!-- 自包含发布：单文件，无需安装 .NET Runtime -->
-    <!-- 注意：WinForms 不支持 Native AOT / Trimming，改用 ReadyToRun 优化冷启动 -->
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
-    <PublishReadyToRun>true</PublishReadyToRun>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <InvariantGlobalization>false</InvariantGlobalization>
+
+    <!-- 体积优化：关闭 R2R（节省 ~40-60MB），启用部分裁剪 -->
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
+    <DebugType>embedded</DebugType>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 
     <!-- 应用图标（可后续替换） -->
     <!-- <ApplicationIcon>Resources\app.ico</ApplicationIcon> -->

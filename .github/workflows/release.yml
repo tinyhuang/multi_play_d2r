@@ -91,6 +91,8 @@ jobs:
           -p:Version=${{ steps.ver.outputs.version }}
           -p:FileVersion=${{ steps.ver.outputs.file_version }}
           -p:InformationalVersion=${{ steps.ver.outputs.info_version }}
+          -p:EnableCompressionInSingleFile=true
+          -p:DebugType=embedded
 
       - name: Archive publish folder
         shell: pwsh
