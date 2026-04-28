@@ -30,7 +30,7 @@
 
   <ItemGroup>
     <!-- WPF UI Framework (Lepoco) for Fluent design -->
-    <PackageReference Include="Wpf.Ui" Version="3.2.0" />
+    <PackageReference Include="WPF-UI" Version="4.2.1" />
     <!-- Segoe Fluent Icons font -->
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.1" />
   </ItemGroup>
