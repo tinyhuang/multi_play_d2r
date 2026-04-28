@@ -70,17 +70,17 @@
             </Grid.ColumnDefinitions>
 
             <!-- 快速操作按钮 -->
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
-                <Button x:Name="BtnLaunchAll" Content="▶ Launch All" Click="BtnLaunchAll_Click" />
-                <Button x:Name="BtnStopAll" Content="■ Stop All" Click="BtnStopAll_Click" />
-                <Button x:Name="BtnAddAccount" Content="⌂ Add Account" Click="BtnAddAccount_Click" />
-                <Button x:Name="BtnSettings" Content="⚙ Settings" Click="BtnSettings_Click" />
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Button x:Name="BtnLaunchAll" Content="▶ Launch All" Click="BtnLaunchAll_Click" Margin="0,0,4,0" />
+                <Button x:Name="BtnStopAll" Content="■ Stop All" Click="BtnStopAll_Click" Margin="0,0,4,0" />
+                <Button x:Name="BtnAddAccount" Content="⌂ Add Account" Click="BtnAddAccount_Click" Margin="0,0,4,0" />
+                <Button x:Name="BtnSettings" Content="⚙ Settings" Click="BtnSettings_Click" Margin="0,0,4,0" />
                 <Button x:Name="BtnLayout" Content="Layout" Click="BtnLayout_Click" />
             </StackPanel>
 
             <!-- 语言/主题快速切换 -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="4">
-                <Button x:Name="BtnLangZh" Content="中" Click="BtnLangZh_Click" Width="32" Height="32" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button x:Name="BtnLangZh" Content="中" Click="BtnLangZh_Click" Width="32" Height="32" Margin="0,0,4,0" />
                 <Button x:Name="BtnLangEn" Content="En" Click="BtnLangEn_Click" Width="32" Height="32" />
             </StackPanel>
         </Grid>
