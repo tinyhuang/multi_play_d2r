@@ -39,7 +39,7 @@ public partial class MonitorLayoutDialog : Window
                 WorkArea = [m.WorkArea.X, m.WorkArea.Y, m.WorkArea.Width, m.WorkArea.Height],
                 DpiScale = m.DpiScale,
                 IsPrimary = m.IsPrimary,
-                RefreshHz = m.RefreshRate,
+                RefreshHz = m.RefreshHz,
             })
             .ToList();
 
