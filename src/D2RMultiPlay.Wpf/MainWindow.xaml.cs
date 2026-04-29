@@ -311,7 +311,9 @@ public partial class MainWindow : Window
 
     private void MenuAbout_Click(object sender, RoutedEventArgs e)
     {
-        MessageBox.Show(S.AboutContent, S.MenuAbout, MessageBoxButton.OK, MessageBoxImage.Information);
+        var build = BuildInfo.ReadCurrent();
+        var text = S.AboutContent + "\n\nVersion: " + build.Display;
+        MessageBox.Show(text, S.MenuAbout, MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     // ===== Quick Action Buttons =====
