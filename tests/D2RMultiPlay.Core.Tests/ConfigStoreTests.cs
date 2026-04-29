@@ -3,6 +3,7 @@
 // ============================================================
 
 using D2RMultiPlay.Core.Config;
+using System.Runtime.Versioning;
 
 namespace D2RMultiPlay.Core.Tests;
 
@@ -119,6 +120,7 @@ public class ConfigStoreTests
     }
 
     [Fact]
+    [SupportedOSPlatform("windows")]
     public void ExportPortable_WithoutPasswords_ClearsPasswordField()
     {
         var config = new AppConfig

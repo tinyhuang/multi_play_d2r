@@ -1,10 +1,12 @@
 using D2RMultiPlay.Core.Config;
+using System.Runtime.Versioning;
 
 namespace D2RMultiPlay.Core.Tests;
 
 public class ConfigCryptoTests
 {
     [Fact]
+    [SupportedOSPlatform("windows")]
     public void EncryptDecrypt_WithoutPasswords_RoundTrip_Succeeds()
     {
         var config = new AppConfig
@@ -47,6 +49,7 @@ public class ConfigCryptoTests
     }
 
     [Fact]
+    [SupportedOSPlatform("windows")]
     public void Decrypt_WithWrongPassphrase_ThrowsCryptographicException()
     {
         var config = new AppConfig
