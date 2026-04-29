@@ -50,6 +50,7 @@ public class ConfigStoreTests
                     new AccountConfig
                     {
                         Id = 1, Enabled = true, Name = "Main",
+                        IconPath = @"C:\Icons\main.png",
                         Role = "master", User = "test@example.com",
                         Mod = "tiny", Options = "-txt",
                         Layout = new WindowLayout { X = 0, Y = 0, W = 1920, H = 1080, Borderless = true }
@@ -66,6 +67,7 @@ public class ConfigStoreTests
             Assert.Equal(original.Global.LaunchIntervalSec, loaded.Global.LaunchIntervalSec);
             Assert.Single(loaded.Accounts);
             Assert.Equal("Main", loaded.Accounts[0].Name);
+            Assert.Equal(@"C:\Icons\main.png", loaded.Accounts[0].IconPath);
             Assert.Equal("master", loaded.Accounts[0].Role);
             Assert.Equal(1920, loaded.Accounts[0].Layout.W);
         }
@@ -114,5 +116,23 @@ public class ConfigStoreTests
     public void Import_InvalidJson_ThrowsException()
     {
         Assert.Throws<System.Text.Json.JsonException>(() => ConfigStore.Import("not valid json"));
+    }
+
+    [Fact]
+    public void ExportPortable_WithoutPasswords_ClearsPasswordField()
+    {
+        var config = new AppConfig
+        {
+            Accounts =
+            [
+                new AccountConfig { Id = 1, User = "test@test.com", PassEnc = "EncryptedPlaceholder" }
+            ]
+        };
+
+        var json = ConfigStore.ExportPortable(config, includePasswords: false);
+        var reimported = ConfigStore.Import(json);
+
+        Assert.Equal(string.Empty, reimported.Accounts[0].PassEnc);
+        Assert.Equal("test@test.com", reimported.Accounts[0].User);
     }
 }

@@ -17,48 +17,48 @@
         <!-- 菜单栏 -->
         <Menu DockPanel.Dock="Top" Background="{ui:ThemeResource ControlBackgroundBrush}">
             <!-- File Menu -->
-            <MenuItem Header="File">
-                <MenuItem Header="Export Encrypted..." InputGestureText="Ctrl+E" Click="MenuExportEncrypted_Click" />
-                <MenuItem Header="Import Encrypted..." InputGestureText="Ctrl+I" Click="MenuImportEncrypted_Click" />
+            <MenuItem x:Name="MenuFileRoot" Header="File">
+                <MenuItem x:Name="MenuExportEncrypted" Header="Export Encrypted..." InputGestureText="Ctrl+E" Click="MenuExportEncrypted_Click" />
+                <MenuItem x:Name="MenuImportEncrypted" Header="Import Encrypted..." InputGestureText="Ctrl+I" Click="MenuImportEncrypted_Click" />
                 <Separator />
-                <MenuItem Header="Export..." Click="MenuExport_Click" />
-                <MenuItem Header="Import..." Click="MenuImport_Click" />
+                <MenuItem x:Name="MenuExportPlain" Header="Export..." Click="MenuExport_Click" />
+                <MenuItem x:Name="MenuImportPlain" Header="Import..." Click="MenuImport_Click" />
                 <Separator />
-                <MenuItem Header="Exit" InputGestureText="Alt+F4" Click="MenuExit_Click" />
+                <MenuItem x:Name="MenuExit" Header="Exit" InputGestureText="Alt+F4" Click="MenuExit_Click" />
             </MenuItem>
 
             <!-- Accounts Menu -->
-            <MenuItem Header="Accounts">
-                <MenuItem Header="Add Account..." InputGestureText="Ctrl+N" Click="MenuAddAccount_Click" />
-                <MenuItem Header="Launch All" InputGestureText="F5" Click="MenuLaunchAll_Click" />
-                <MenuItem Header="Stop All" InputGestureText="Shift+F5" Click="MenuStopAll_Click" />
+            <MenuItem x:Name="MenuAccountsRoot" Header="Accounts">
+                <MenuItem x:Name="MenuAddAccount" Header="Add Account..." InputGestureText="Ctrl+N" Click="MenuAddAccount_Click" />
+                <MenuItem x:Name="MenuLaunchAll" Header="Launch All" InputGestureText="F5" Click="MenuLaunchAll_Click" />
+                <MenuItem x:Name="MenuStopAll" Header="Stop All" InputGestureText="Shift+F5" Click="MenuStopAll_Click" />
             </MenuItem>
 
             <!-- Tools Menu -->
-            <MenuItem Header="Tools">
-                <MenuItem Header="Global Settings..." InputGestureText="Ctrl+," Click="MenuGlobalSettings_Click" />
-                <MenuItem Header="Game Window Layout..." InputGestureText="Ctrl+L" Click="MenuMonitorLayout_Click" />
+            <MenuItem x:Name="MenuToolsRoot" Header="Tools">
+                <MenuItem x:Name="MenuGlobalSettings" Header="Global Settings..." InputGestureText="Ctrl+," Click="MenuGlobalSettings_Click" />
+                <MenuItem x:Name="MenuMonitorLayout" Header="Game Window Layout..." InputGestureText="Ctrl+L" Click="MenuMonitorLayout_Click" />
             </MenuItem>
 
             <!-- View Menu -->
-            <MenuItem Header="View">
-                <MenuItem Header="Language">
-                    <MenuItem Header="中文" Click="MenuLanguageChinese_Click" />
-                    <MenuItem Header="English" Click="MenuLanguageEnglish_Click" />
+            <MenuItem x:Name="MenuViewRoot" Header="View">
+                <MenuItem x:Name="MenuLanguageRoot" Header="Language">
+                    <MenuItem x:Name="MenuLanguageZh" Header="中文" Click="MenuLanguageChinese_Click" />
+                    <MenuItem x:Name="MenuLanguageEn" Header="English" Click="MenuLanguageEnglish_Click" />
                 </MenuItem>
-                <MenuItem Header="Theme">
-                    <MenuItem Header="Dark" Click="MenuThemeDark_Click" />
-                    <MenuItem Header="Light" Click="MenuThemeLight_Click" />
+                <MenuItem x:Name="MenuThemeRoot" Header="Theme">
+                    <MenuItem x:Name="MenuThemeDark" Header="Dark" Click="MenuThemeDark_Click" />
+                    <MenuItem x:Name="MenuThemeLight" Header="Light" Click="MenuThemeLight_Click" />
                 </MenuItem>
                 <Separator />
-                <MenuItem Header="Toggle Log" InputGestureText="Ctrl+Shift+L" Click="MenuToggleLog_Click" />
+                <MenuItem x:Name="MenuToggleLog" Header="Toggle Log" InputGestureText="Ctrl+Shift+L" Click="MenuToggleLog_Click" />
             </MenuItem>
 
             <!-- Help Menu -->
-            <MenuItem Header="Help">
-                <MenuItem Header="Quick Start" Click="MenuQuickStart_Click" />
+            <MenuItem x:Name="MenuHelpRoot" Header="Help">
+                <MenuItem x:Name="MenuQuickStart" Header="Quick Start" Click="MenuQuickStart_Click" />
                 <Separator />
-                <MenuItem Header="About..." Click="MenuAbout_Click" />
+                <MenuItem x:Name="MenuAbout" Header="About..." Click="MenuAbout_Click" />
             </MenuItem>
         </Menu>
 
@@ -74,6 +74,10 @@
                 <Button x:Name="BtnLaunchAll" Content="▶ Launch All" Click="BtnLaunchAll_Click" Margin="0,0,4,0" />
                 <Button x:Name="BtnStopAll" Content="■ Stop All" Click="BtnStopAll_Click" Margin="0,0,4,0" />
                 <Button x:Name="BtnAddAccount" Content="⌂ Add Account" Click="BtnAddAccount_Click" Margin="0,0,4,0" />
+                <Button x:Name="BtnEditSelected" Content="Edit" Click="BtnEditSelected_Click" Margin="0,0,4,0" />
+                <Button x:Name="BtnDeleteSelected" Content="Delete" Click="BtnDeleteSelected_Click" Margin="0,0,4,0" />
+                <Button x:Name="BtnLaunchSelected" Content="Launch Selected" Click="BtnLaunchSelected_Click" Margin="0,0,4,0" />
+                <Button x:Name="BtnStopSelected" Content="Stop Selected" Click="BtnStopSelected_Click" Margin="0,0,4,0" />
                 <Button x:Name="BtnSettings" Content="⚙ Settings" Click="BtnSettings_Click" Margin="0,0,4,0" />
                 <Button x:Name="BtnLayout" Content="Layout" Click="BtnLayout_Click" />
             </StackPanel>
@@ -97,22 +101,32 @@
             <DataGrid x:Name="DataGridAccounts" 
                       Grid.Row="0"
                       AutoGenerateColumns="False"
+                      IsReadOnly="True"
                       CanUserAddRows="False"
                       CanUserDeleteRows="False"
                       CanUserResizeRows="False"
                       SelectionMode="Single"
-                                            MouseDoubleClick="DataGridAccounts_MouseDoubleClick"
+                      SelectionChanged="DataGridAccounts_SelectionChanged"
+                      MouseDoubleClick="DataGridAccounts_MouseDoubleClick"
                       Margin="8">
                 <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Icon" Binding="{Binding IconHint}" Width="60" IsReadOnly="True" />
-                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50" IsReadOnly="True" />
-                    <DataGridCheckBoxColumn Header="Enabled" Binding="{Binding Enabled}" Width="70" />
-                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="120" />
-                    <DataGridTextColumn Header="Email" Binding="{Binding User}" Width="150" />
-                    <DataGridTextColumn Header="Role" Binding="{Binding Role}" Width="100" IsReadOnly="True" />
-                    <DataGridTextColumn Header="Server" Binding="{Binding ServerAddress}" Width="150" />
-                    <DataGridTextColumn Header="Mod" Binding="{Binding Mod}" Width="100" />
-                    <DataGridTextColumn Header="Status" Binding="{Binding StatusDisplay}" Width="100" IsReadOnly="True" />
+                    <DataGridTemplateColumn x:Name="ColIcon" Header="Icon" Width="58">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Width="26" Height="26" CornerRadius="4" Background="#1FFFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Image Source="{Binding IconImage}" Stretch="UniformToFill" Width="24" Height="24"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn x:Name="ColId" Header="ID" Binding="{Binding Id}" Width="50" IsReadOnly="True" />
+                    <DataGridCheckBoxColumn x:Name="ColEnabled" Header="Enabled" Binding="{Binding Enabled}" Width="70" IsReadOnly="True" />
+                    <DataGridTextColumn x:Name="ColName" Header="Name" Binding="{Binding Name}" Width="140" IsReadOnly="True" />
+                    <DataGridTextColumn x:Name="ColEmail" Header="Email" Binding="{Binding User}" Width="180" IsReadOnly="True" />
+                    <DataGridTextColumn x:Name="ColRole" Header="Role" Binding="{Binding Role}" Width="90" IsReadOnly="True" />
+                    <DataGridTextColumn x:Name="ColServer" Header="Server" Binding="{Binding ServerAddress}" Width="170" IsReadOnly="True" />
+                    <DataGridTextColumn x:Name="ColMod" Header="Mod" Binding="{Binding Mod}" Width="100" IsReadOnly="True" />
+                    <DataGridTextColumn x:Name="ColStatus" Header="Status" Binding="{Binding StatusDisplay}" Width="110" IsReadOnly="True" />
                 </DataGrid.Columns>
             </DataGrid>
 

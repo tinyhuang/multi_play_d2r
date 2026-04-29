@@ -12,6 +12,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using D2RMultiPlay.Core.Config;
 using D2RMultiPlay.Core.Guard;
@@ -88,6 +89,28 @@ public partial class MainWindow : Window
 
         BtnStopAll.IsEnabled = states.Any(s => s.IsAlive);
         BtnLaunchAll.IsEnabled = _config.Accounts.Any(a => a.Enabled && !(states.FirstOrDefault(s => s.AccountId == a.Id)?.IsAlive ?? false));
+        UpdateSelectionActions();
+    }
+
+    private void UpdateSelectionActions()
+    {
+        var acct = GetSelectedAccount();
+        if (acct == null)
+        {
+            BtnEditSelected.IsEnabled = false;
+            BtnDeleteSelected.IsEnabled = false;
+            BtnLaunchSelected.IsEnabled = false;
+            BtnStopSelected.IsEnabled = false;
+            return;
+        }
+
+        var state = _guard.GetState(acct.Id);
+        var isAlive = state?.IsAlive == true;
+
+        BtnEditSelected.IsEnabled = true;
+        BtnDeleteSelected.IsEnabled = true;
+        BtnLaunchSelected.IsEnabled = acct.Enabled && !isAlive;
+        BtnStopSelected.IsEnabled = isAlive;
     }
 
     private void Log(string message)
@@ -318,6 +341,61 @@ public partial class MainWindow : Window
         Log($"Account {created.Id} added.");
     }
 
+    private void BtnEditSelected_Click(object sender, RoutedEventArgs e)
+    {
+        EditSelectedAccount();
+    }
+
+    private void BtnDeleteSelected_Click(object sender, RoutedEventArgs e)
+    {
+        var acct = GetSelectedAccount();
+        if (acct == null)
+            return;
+
+        var confirm = MessageBox.Show(
+            $"Delete account #{acct.Id} ({acct.Name})?",
+            S.Warning,
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        if (confirm != MessageBoxResult.Yes)
+            return;
+
+        StopSingle(acct.Id);
+        _config.Accounts.RemoveAll(a => a.Id == acct.Id);
+        SaveConfig();
+        RefreshGrid();
+        Log($"Account {acct.Id} deleted.");
+    }
+
+    private async void BtnLaunchSelected_Click(object sender, RoutedEventArgs e)
+    {
+        var acct = GetSelectedAccount();
+        if (acct == null)
+            return;
+
+        if (!CheckLaunchPrerequisites())
+            return;
+
+        if (_guard.GetAllStates().Any(s => s.IsAlive))
+        {
+            var (_, handleLog) = HandleCli.FindAndCloseAll(_config.Global.HandleExePath, HandleCli.DefaultMutexName);
+            foreach (var line in handleLog)
+                Log(line);
+        }
+
+        await LaunchSingleCoreAsync(acct);
+        RefreshGrid();
+    }
+
+    private void BtnStopSelected_Click(object sender, RoutedEventArgs e)
+    {
+        var acct = GetSelectedAccount();
+        if (acct == null)
+            return;
+
+        StopSingle(acct.Id);
+    }
+
     private void BtnSettings_Click(object? sender, RoutedEventArgs? e)
     {
         var dlg = new GlobalSettingsDialog(_config.Global) { Owner = this };
@@ -381,11 +459,54 @@ public partial class MainWindow : Window
     private void ApplyLocalization()
     {
         Title = S.AppTitle;
+
+        MenuFileRoot.Header = S.MenuFile;
+        MenuExportEncrypted.Header = S.MenuExport + " (.d2rmp)";
+        MenuImportEncrypted.Header = S.MenuImport + " (.d2rmp)";
+        MenuExportPlain.Header = S.MenuExport + " (JSON)";
+        MenuImportPlain.Header = S.MenuImport + " (JSON)";
+        MenuExit.Header = S.MenuExit;
+
+        MenuAccountsRoot.Header = S.MenuAccounts;
+        MenuAddAccount.Header = S.BtnAddAccount;
+        MenuLaunchAll.Header = S.BtnLaunchAll;
+        MenuStopAll.Header = S.BtnStopAll;
+
+        MenuToolsRoot.Header = S.MenuTools;
+        MenuGlobalSettings.Header = S.MenuGlobalSettings;
+        MenuMonitorLayout.Header = S.MenuLayout;
+
+        MenuViewRoot.Header = S.MenuView;
+        MenuLanguageRoot.Header = S.MenuLanguage;
+        MenuThemeRoot.Header = S.MenuTheme;
+        MenuThemeDark.Header = S.MenuThemeDark;
+        MenuThemeLight.Header = S.MenuThemeLight;
+        MenuToggleLog.Header = S.MenuToggleLog;
+
+        MenuHelpRoot.Header = S.MenuHelp;
+        MenuQuickStart.Header = S.MenuQuickStart;
+        MenuAbout.Header = S.MenuAbout;
+
         BtnLaunchAll.Content = S.BtnLaunchAll;
         BtnStopAll.Content = S.BtnStopAll;
         BtnAddAccount.Content = S.BtnAddAccount;
+        BtnEditSelected.Content = S.BtnEdit;
+        BtnDeleteSelected.Content = S.BtnDelete;
+        BtnLaunchSelected.Content = S.BtnLaunch;
+        BtnStopSelected.Content = S.BtnStop;
         BtnLayout.Content = S.MenuLayout;
         BtnSettings.Content = S.MenuGlobalSettings;
+
+        ColIcon.Header = "Icon";
+        ColId.Header = S.ColId;
+        ColEnabled.Header = S.ColEnabled;
+        ColName.Header = S.ColName;
+        ColEmail.Header = S.ColEmail;
+        ColRole.Header = S.ColRole;
+        ColServer.Header = S.ColServer;
+        ColMod.Header = S.ColMod;
+        ColStatus.Header = S.ColStatus;
+
         StatusLabel.Text = S.StatusReady;
     }
 
@@ -495,6 +616,62 @@ public partial class MainWindow : Window
         RefreshGrid();
     }
 
+    private void StopSingle(int accountId)
+    {
+        var state = _guard.GetState(accountId);
+        if (state == null || !state.IsAlive)
+            return;
+
+        try
+        {
+            var proc = Process.GetProcessById((int)state.ProcessId);
+            if (!proc.HasExited)
+                proc.Kill();
+        }
+        catch
+        {
+            // ignore already-exited process
+        }
+
+        _guard.Unregister(accountId);
+        RefreshGrid();
+    }
+
+    private AccountConfig? GetSelectedAccount()
+    {
+        if (DataGridAccounts.SelectedItem is not AccountViewModel vm)
+            return null;
+
+        return _config.Accounts.FirstOrDefault(a => a.Id == vm.Id);
+    }
+
+    private void EditSelectedAccount()
+    {
+        var acct = GetSelectedAccount();
+        if (acct == null)
+            return;
+
+        var dlg = new AccountEditDialog(acct, _config.Global) { Owner = this };
+        if (dlg.ShowDialog() != true)
+            return;
+
+        var idx = _config.Accounts.FindIndex(a => a.Id == acct.Id);
+        if (idx >= 0)
+        {
+            var updated = dlg.Result;
+            updated.Layout = acct.Layout;
+            _config.Accounts[idx] = updated;
+            SaveConfig();
+            RefreshGrid();
+            Log($"Account {updated.Id} updated.");
+        }
+    }
+
+    private void DataGridAccounts_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateSelectionActions();
+    }
+
     private WindowLayout CreateDefaultLayout(int accountId)
     {
         var monitors = MonitorEnumerator.Enumerate();
@@ -547,33 +724,14 @@ public partial class MainWindow : Window
 
     private void DataGridAccounts_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        if (DataGridAccounts.SelectedItem is not AccountViewModel vm)
-            return;
-
-        var acct = _config.Accounts.FirstOrDefault(a => a.Id == vm.Id);
-        if (acct == null)
-            return;
-
-        var dlg = new AccountEditDialog(acct, _config.Global) { Owner = this };
-        if (dlg.ShowDialog() != true)
-            return;
-
-        var idx = _config.Accounts.FindIndex(a => a.Id == acct.Id);
-        if (idx >= 0)
-        {
-            var updated = dlg.Result;
-            updated.Layout = acct.Layout;
-            _config.Accounts[idx] = updated;
-            SaveConfig();
-            RefreshGrid();
-        }
+        EditSelectedAccount();
     }
 
     // ===== View Model for DataGrid =====
 
     public class AccountViewModel
     {
-        public string IconHint { get; set; } = "";
+        public ImageSource? IconImage { get; set; }
         public int Id { get; set; }
         public bool Enabled { get; set; }
         public string Name { get; set; } = "";
@@ -585,7 +743,7 @@ public partial class MainWindow : Window
 
         public AccountViewModel(AccountConfig cfg, bool isAlive)
         {
-            IconHint = string.IsNullOrWhiteSpace(cfg.IconPath) ? "-" : "🖼";
+            IconImage = CreateIconImage(cfg.IconPath);
             Id = cfg.Id;
             Enabled = cfg.Enabled;
             Name = cfg.Name;
@@ -594,6 +752,35 @@ public partial class MainWindow : Window
             ServerAddress = cfg.ServerAddress;
             Mod = cfg.Mod;
             StatusDisplay = !Enabled ? S.StatusDisabled : (isAlive ? S.StatusAlive : S.StatusDead);
+        }
+
+        private static ImageSource? CreateIconImage(string? iconPath)
+        {
+            if (!string.IsNullOrWhiteSpace(iconPath) && File.Exists(iconPath))
+            {
+                try
+                {
+                    var bmp = new BitmapImage();
+                    bmp.BeginInit();
+                    bmp.UriSource = new Uri(iconPath, UriKind.Absolute);
+                    bmp.CacheOption = BitmapCacheOption.OnLoad;
+                    bmp.DecodePixelWidth = 24;
+                    bmp.EndInit();
+                    bmp.Freeze();
+                    return bmp;
+                }
+                catch
+                {
+                    // fallback to default icon below
+                }
+            }
+
+            var fallback = new DrawingImage(new GeometryDrawing(
+                Brushes.Goldenrod,
+                null,
+                Geometry.Parse("M3,4 L21,4 21,20 3,20 Z M6,8 L18,8 18,16 6,16 Z")));
+            fallback.Freeze();
+            return fallback;
         }
     }
 }
