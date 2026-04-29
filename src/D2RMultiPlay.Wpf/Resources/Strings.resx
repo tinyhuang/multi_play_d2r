@@ -76,6 +76,7 @@
   <data name="BtnStop" xml:space="preserve"><value>Stop</value></data>
   <data name="BtnDisabled" xml:space="preserve"><value>Disabled</value></data>
   <data name="BtnReconnect" xml:space="preserve"><value>Reconnect</value></data>
+  <data name="BtnBrowse" xml:space="preserve"><value>Browse...</value></data>
 
   <data name="ColId" xml:space="preserve"><value>ID</value></data>
   <data name="ColEnabled" xml:space="preserve"><value>Enabled</value></data>
@@ -129,6 +130,7 @@
   <data name="LblExePath" xml:space="preserve"><value>D2R.exe Override:</value></data>
   <data name="LblServerOverride" xml:space="preserve"><value>Server Override:</value></data>
   <data name="ServerUseGlobalDefault" xml:space="preserve"><value>(Use Global Default)</value></data>
+  <data name="LblCustomIcon" xml:space="preserve"><value>Custom Icon (optional):</value></data>
   <data name="LblWindowWidth" xml:space="preserve"><value>Window Width:</value></data>
   <data name="LblWindowHeight" xml:space="preserve"><value>Window Height:</value></data>
   <data name="LblLaunchPreview" xml:space="preserve"><value>Launch Preview:</value></data>
@@ -144,6 +146,13 @@
   <data name="ServerHint" xml:space="preserve"><value>If account-level server is empty, this global server will be used.</value></data>
   <data name="LblInterval" xml:space="preserve"><value>Launch Interval (sec):</value></data>
   <data name="LblMutexName" xml:space="preserve"><value>Mutex Name:</value></data>
+  <data name="LblProfiles" xml:space="preserve"><value>Profiles Root:</value></data>
+  <data name="LblTheme" xml:space="preserve"><value>Theme:</value></data>
+  <data name="LblIconStyle" xml:space="preserve"><value>Icon Style:</value></data>
+  <data name="LblLanguage" xml:space="preserve"><value>Language:</value></data>
+
+  <!-- ===== AccountEditor (Additional) ===== -->
+  <data name="LblCustomIcon" xml:space="preserve"><value>Custom Icon (optional):</value></data>
 
   <!-- ===== MonitorLayout ===== -->
   <data name="MonitorLayoutTitle" xml:space="preserve"><value>Game Window Layout</value></data>

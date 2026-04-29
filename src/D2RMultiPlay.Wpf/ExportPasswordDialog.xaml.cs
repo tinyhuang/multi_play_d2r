@@ -20,6 +20,19 @@ public partial class ExportPasswordDialog : Window
     public ExportPasswordDialog()
     {
         InitializeComponent();
+        ApplyLocalization();
+    }
+
+    private void ApplyLocalization()
+    {
+        var s = new Strings();
+        Title = s.ExportSetPassphraseTitle;
+        LblExportPassphrase.Text = s.ExportPassphraseLabel;
+        LblExportPassphraseConfirm.Text = s.ExportPassphraseConfirmLabel;
+        ChkIncludePasswords.Content = s.ExportIncludePasswordOption;
+        LblExportWarning.Text = s.ExportPassphraseWarning;
+        BtnCancelExport.Content = s.Cancel;
+        BtnOkExport.Content = s.OK;
     }
 
     private void BtnOk_Click(object sender, RoutedEventArgs e)

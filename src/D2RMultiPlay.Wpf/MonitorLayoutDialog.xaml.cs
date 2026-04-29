@@ -13,6 +13,10 @@ public partial class MonitorLayoutDialog : Window
     public MonitorLayoutDialog(AppConfig current)
     {
         InitializeComponent();
+        
+        var s = new Resources.Strings();
+        Title = s.MonitorLayoutTitle;
+
         Result = ConfigStore.Import(ConfigStore.Export(current, includePasswords: true));
 
         EnsureLayouts();

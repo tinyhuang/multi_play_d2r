@@ -25,7 +25,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="D2R.exe Path" Margin="0,0,0,4"/>
+        <TextBlock x:Name="LblD2rExe" Grid.Row="0" Margin="0,0,0,4"/>
         <Grid Grid.Row="1" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -33,10 +33,10 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <TextBox x:Name="TxtD2r" Grid.Column="0" Height="32"/>
-            <Button Grid.Column="2" Content="Browse..." Click="BtnBrowseD2r_Click" MinWidth="88"/>
+            <Button x:Name="BtnBrowseD2rBtn" Grid.Column="2" Click="BtnBrowseD2r_Click" MinWidth="88"/>
         </Grid>
 
-        <TextBlock Grid.Row="2" Text="handle.exe Path" Margin="0,0,0,4"/>
+        <TextBlock x:Name="LblHandleExe" Grid.Row="2" Margin="0,0,0,4"/>
         <Grid Grid.Row="3" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -44,16 +44,16 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <TextBox x:Name="TxtHandle" Grid.Column="0" Height="32"/>
-            <Button Grid.Column="2" Content="Browse..." Click="BtnBrowseHandle_Click" MinWidth="88"/>
+            <Button x:Name="BtnBrowseHandleBtn" Grid.Column="2" Click="BtnBrowseHandle_Click" MinWidth="88"/>
         </Grid>
 
-        <TextBlock Grid.Row="4" Text="Battle.net Server" Margin="0,0,0,4"/>
+        <TextBlock x:Name="LblServer" Grid.Row="4" Margin="0,0,0,4"/>
         <TextBox x:Name="TxtServer" Grid.Row="5" Height="32" Margin="0,0,0,8"/>
 
-        <TextBlock Grid.Row="6" Text="Launch Interval (seconds)" Margin="0,0,0,4"/>
+        <TextBlock x:Name="LblInterval" Grid.Row="6" Margin="0,0,0,4"/>
         <TextBox x:Name="TxtInterval" Grid.Row="7" Height="32" Margin="0,0,0,8"/>
 
-        <TextBlock Grid.Row="8" Text="Profiles Root" Margin="0,0,0,4"/>
+        <TextBlock x:Name="LblProfiles" Grid.Row="8" Margin="0,0,0,4"/>
         <TextBox x:Name="TxtProfilesRoot" Grid.Row="9" Height="32" Margin="0,0,0,8"/>
 
         <Grid Grid.Row="10" Margin="0,0,0,8">
@@ -64,7 +64,7 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0">
-                <TextBlock Text="Theme" Margin="0,0,0,4"/>
+                <TextBlock x:Name="LblTheme" Margin="0,0,0,4"/>
                 <ComboBox x:Name="CmbTheme" Height="32">
                     <ComboBoxItem Content="dark"/>
                     <ComboBoxItem Content="light"/>
@@ -72,7 +72,7 @@
             </StackPanel>
 
             <StackPanel Grid.Column="2">
-                <TextBlock Text="Icon Style" Margin="0,0,0,4"/>
+                <TextBlock x:Name="LblIconStyle" Margin="0,0,0,4"/>
                 <ComboBox x:Name="CmbIconStyle" Height="32">
                     <ComboBoxItem Content="gamer"/>
                     <ComboBoxItem Content="plain"/>
@@ -81,7 +81,7 @@
         </Grid>
 
         <StackPanel Grid.Row="11" Orientation="Horizontal" Margin="0,0,0,8">
-            <TextBlock Text="Language:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+            <TextBlock x:Name="LblLanguage" VerticalAlignment="Center" Margin="0,0,8,0"/>
             <ComboBox x:Name="CmbCulture" Width="160" Height="32">
                 <ComboBoxItem Content="zh-CN"/>
                 <ComboBoxItem Content="en-US"/>
@@ -89,8 +89,8 @@
         </StackPanel>
 
         <StackPanel Grid.Row="13" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Cancel" IsCancel="True" MinWidth="88" Margin="0,0,8,0"/>
-            <Button Content="OK" Click="BtnOk_Click" MinWidth="88"/>
+            <Button x:Name="BtnCancel" IsCancel="True" MinWidth="88" Margin="0,0,8,0"/>
+            <Button x:Name="BtnOk" Click="BtnOk_Click" MinWidth="88"/>
         </StackPanel>
     </Grid>
 </Window>

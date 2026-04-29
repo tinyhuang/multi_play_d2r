@@ -52,6 +52,7 @@ internal sealed class Strings
     public string BtnReconnect => Get("BtnReconnect");
     public string BtnStop => Get("BtnStop");
     public string BtnDisabled => Get("BtnDisabled");
+    public string BtnBrowse => Get("BtnBrowse");
 
     public string ColId => Get("ColId");
     public string ColEnabled => Get("ColEnabled");
@@ -102,6 +103,7 @@ internal sealed class Strings
     public string LblExePath => Get("LblExePath");
     public string LblServerOverride => Get("LblServerOverride");
     public string ServerUseGlobalDefault => Get("ServerUseGlobalDefault");
+    public string LblCustomIcon => Get("LblCustomIcon");
     public string LblWindowWidth => Get("LblWindowWidth");
     public string LblWindowHeight => Get("LblWindowHeight");
     public string LblLaunchPreview => Get("LblLaunchPreview");
@@ -117,6 +119,10 @@ internal sealed class Strings
     public string ServerHint => Get("ServerHint");
     public string LblInterval => Get("LblInterval");
     public string LblMutexName => Get("LblMutexName");
+    public string LblProfiles => Get("LblProfiles");
+    public string LblTheme => Get("LblTheme");
+    public string LblIconStyle => Get("LblIconStyle");
+    public string LblLanguage => Get("LblLanguage");
 
     public string MonitorLayoutTitle => Get("MonitorLayoutTitle");
     public string BtnAutoGrid => Get("BtnAutoGrid");

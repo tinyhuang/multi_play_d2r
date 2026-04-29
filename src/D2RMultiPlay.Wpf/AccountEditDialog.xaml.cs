@@ -16,6 +16,7 @@ public partial class AccountEditDialog : Window
     {
         _accountId = accountId;
         InitializeComponent();
+        ApplyLocalization();
 
         TxtName.Text = $"Account {accountId}";
     }
@@ -24,6 +25,7 @@ public partial class AccountEditDialog : Window
     {
         _accountId = existing.Id;
         InitializeComponent();
+        ApplyLocalization();
 
         TxtName.Text = existing.Name;
         TxtUser.Text = existing.User;
@@ -32,6 +34,22 @@ public partial class AccountEditDialog : Window
         ChkEnabled.IsChecked = existing.Enabled;
         TxtIconPath.Text = existing.IconPath;
         TxtServer.Text = existing.ServerAddress;
+    }
+
+    private void ApplyLocalization()
+    {
+        var s = new Resources.Strings();
+        Title = s.AccountEditorTitle;
+        LblName.Text = s.LblName;
+        LblUser.Text = s.LblUser;
+        LblPassword.Text = s.LblPassword;
+        LblRole.Text = s.LblRole;
+        ChkEnabledLabel.Text = s.ChkEnabled;
+        LblCustomIcon.Text = s.LblCustomIcon;
+        LblServerOverride.Text = s.LblServerOverride;
+        BtnBrowseIconBtn.Content = s.BtnBrowse;
+        BtnCancelAcct.Content = s.Cancel;
+        BtnOkAcct.Content = s.OK;
     }
 
     private void BtnBrowseIcon_Click(object sender, RoutedEventArgs e)

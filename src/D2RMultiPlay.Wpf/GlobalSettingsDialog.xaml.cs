@@ -10,19 +10,22 @@ public partial class GlobalSettingsDialog : Window
 {
     public GlobalSettings Result { get; private set; } = new();
 
-    public GlobalSettingsDialog(GlobalSettings current)
+    private void ApplyLocalization()
     {
-        InitializeComponent();
-
-        TxtD2r.Text = current.D2rExePath;
-        TxtHandle.Text = current.HandleExePath;
-        TxtServer.Text = current.BattleNetAddress;
-        TxtInterval.Text = current.LaunchIntervalSec.ToString();
-        TxtProfilesRoot.Text = current.ProfilesRoot;
-
-        SelectComboItem(CmbTheme, current.UiTheme);
-        SelectComboItem(CmbIconStyle, current.IconStyle);
-        SelectComboItem(CmbCulture, current.UiCulture);
+        var s = new Resources.Strings();
+        Title = s.GlobalSettingsTitle;
+        LblD2rExe.Text = s.LblD2rExe;
+        LblHandleExe.Text = s.LblHandleExe;
+        LblServer.Text = s.LblServer;
+        LblInterval.Text = s.LblInterval;
+        LblProfiles.Text = s.LblProfiles;
+        LblTheme.Text = s.LblTheme;
+        LblIconStyle.Text = s.LblIconStyle;
+        LblLanguage.Text = s.LblLanguage;
+        BtnBrowseD2rBtn.Content = s.BtnBrowse;
+        BtnBrowseHandleBtn.Content = s.BtnBrowse;
+        BtnCancel.Content = s.Cancel;
+        BtnOk.Content = s.OK;
     }
 
     private static void SelectComboItem(ComboBox combo, string value)
@@ -37,6 +40,22 @@ public partial class GlobalSettingsDialog : Window
             }
         }
         combo.SelectedIndex = 0;
+    }
+
+    public GlobalSettingsDialog(GlobalSettings current)
+    {
+        InitializeComponent();
+        ApplyLocalization();
+
+        TxtD2r.Text = current.D2rExePath;
+        TxtHandle.Text = current.HandleExePath;
+        TxtServer.Text = current.BattleNetAddress;
+        TxtInterval.Text = current.LaunchIntervalSec.ToString();
+        TxtProfilesRoot.Text = current.ProfilesRoot;
+
+        SelectComboItem(CmbTheme, current.UiTheme);
+        SelectComboItem(CmbIconStyle, current.IconStyle);
+        SelectComboItem(CmbCulture, current.UiCulture);
     }
 
     private void BtnBrowseD2r_Click(object sender, RoutedEventArgs e)

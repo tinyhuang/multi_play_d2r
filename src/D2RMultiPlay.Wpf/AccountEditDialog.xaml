@@ -24,13 +24,13 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Name" Margin="0,0,0,4"/>
+        <TextBlock x:Name="LblName" Grid.Row="0" Margin="0,0,0,4"/>
         <TextBox x:Name="TxtName" Grid.Row="1" Height="32" Margin="0,0,0,8"/>
 
-        <TextBlock Grid.Row="2" Text="Email / Username" Margin="0,0,0,4"/>
+        <TextBlock x:Name="LblUser" Grid.Row="2" Margin="0,0,0,4"/>
         <TextBox x:Name="TxtUser" Grid.Row="3" Height="32" Margin="0,0,0,8"/>
 
-        <TextBlock Grid.Row="4" Text="Password" Margin="0,0,0,4"/>
+        <TextBlock x:Name="LblPassword" Grid.Row="4" Margin="0,0,0,4"/>
         <PasswordBox x:Name="TxtPassword" Grid.Row="5" Height="32" Margin="0,0,0,8"/>
 
         <Grid Grid.Row="6" Margin="0,0,0,8">
@@ -40,19 +40,19 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
-                <TextBlock Text="Role" Margin="0,0,0,4"/>
+                <TextBlock x:Name="LblRole" Margin="0,0,0,4"/>
                 <ComboBox x:Name="CmbRole" Height="32">
                     <ComboBoxItem Content="master" IsSelected="True"/>
                     <ComboBoxItem Content="slave"/>
                 </ComboBox>
             </StackPanel>
             <StackPanel Grid.Column="2">
-                <TextBlock Text="Enabled" Margin="0,0,0,4"/>
+                <TextBlock x:Name="ChkEnabledLabel" Margin="0,0,0,4"/>
                 <CheckBox x:Name="ChkEnabled" IsChecked="True" VerticalAlignment="Center"/>
             </StackPanel>
         </Grid>
 
-        <TextBlock Grid.Row="7" Text="Custom Icon (optional)" Margin="0,0,0,4"/>
+        <TextBlock x:Name="LblCustomIcon" Grid.Row="7" Margin="0,0,0,4"/>
         <Grid Grid.Row="8" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -60,15 +60,15 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <TextBox x:Name="TxtIconPath" Grid.Column="0" Height="32"/>
-            <Button Grid.Column="2" Content="Browse..." Click="BtnBrowseIcon_Click" MinWidth="88"/>
+            <Button x:Name="BtnBrowseIconBtn" Grid.Column="2" Click="BtnBrowseIcon_Click" MinWidth="88"/>
         </Grid>
 
-        <TextBlock Grid.Row="9" Text="Server Override (optional)" Margin="0,0,0,4"/>
+        <TextBlock x:Name="LblServerOverride" Grid.Row="9" Margin="0,0,0,4"/>
         <TextBox x:Name="TxtServer" Grid.Row="10" Height="32" VerticalAlignment="Top"/>
 
         <StackPanel Grid.Row="11" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button Content="Cancel" IsCancel="True" MinWidth="88" Margin="0,0,8,0"/>
-            <Button Content="OK" Click="BtnOk_Click" MinWidth="88"/>
+            <Button x:Name="BtnCancelAcct" IsCancel="True" MinWidth="88" Margin="0,0,8,0"/>
+            <Button x:Name="BtnOkAcct" Click="BtnOk_Click" MinWidth="88"/>
         </StackPanel>
     </Grid>
 </Window>
